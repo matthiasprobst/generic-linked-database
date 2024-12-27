@@ -3,6 +3,7 @@ import logging
 import pathlib
 import sys
 from typing import List
+
 import rdflib
 
 from gldb import GenericLinkedDatabase
@@ -23,27 +24,27 @@ from example_storage_db import CSVDatabase
 class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
 
     def __init__(self):
-        self._rdf_db = InMemoryRDFDatabase()
-        self._data_db = CSVDatabase()
+        self._metadata_db = InMemoryRDFDatabase()
+        self._storage_db = CSVDatabase()
 
     def upload_file(self, filename):
         filename = pathlib.Path(filename)
         assert filename.exists(), f"File {filename} does not exist."
         if filename.suffix in (".ttl", ".rdf", ".jsonld"):
             logger.info(f"Uploading file {filename} to the RDF database...")
-            return self.meta_db.upload_file(filename)
+            return self.metadata_db.upload_file(filename)
         return self.storage_db.upload_file(filename)
 
     def info(self):
-        return "OpenCeFaDB"
+        return f"GenericLinkedDatabaseImpl(metadata_db={self.metadata_db}, storage_db={self.storage_db})"
 
     @property
-    def meta_db(self) -> InMemoryRDFDatabase:
-        return self._rdf_db
+    def metadata_db(self) -> InMemoryRDFDatabase:
+        return self._metadata_db
 
     @property
     def storage_db(self) -> CSVDatabase:
-        return self._data_db
+        return self._storage_db
 
     def get_temperature_data_by_date(self, date: str) -> List[FederatedQueryResult]:
         """High-level abstraction for user to find temperature data.
@@ -132,7 +133,7 @@ def test_concrete_impl():
 
     # data = db.plot_temperature_data_by_date(date="2024-01-01")
 
-    result = db.meta_db.select(data[0].metadata["dcat:distribution"], serialization_format="json-ld", indent=4)
+    result = db.metadata_db.select(data[0].metadata["dcat:distribution"], serialization_format="json-ld", indent=4)
     print(result)
 
 

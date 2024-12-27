@@ -13,7 +13,7 @@ class GenericLinkedDatabase(ABC):
 
     @property
     @abstractmethod
-    def meta_db(self) -> RDFDatabase:
+    def metadata_db(self) -> RDFDatabase:
         """Returns the RDF Database (e.g. GraphDB)."""
 
     @property
@@ -31,4 +31,4 @@ class GenericLinkedDatabase(ABC):
 
     def sparql(self, sparql_query: str):
         logger.debug("Performing sparql query...")
-        return self.meta_db.graph.query(sparql_query)
+        return self.metadata_db.graph.query(sparql_query)
