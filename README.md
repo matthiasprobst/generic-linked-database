@@ -78,6 +78,11 @@ classDiagram
     class RawDataStoreQuery {
         <<abstract>>
     }
+    
+    class SparqlQuery {
+        +sparql_query: str
+        +execute(graph: rdflib.Graph)
+    }
 
     %% Relationships
     GenericLinkedDatabase --> DataStoreManager
@@ -85,10 +90,9 @@ classDiagram
     DataStoreManager --> DataStore
     DataStore <|-- RDFStore
     DataStore <|-- RawDataStore
-    RDFStore <|-- GraphDBStore
-    RawDataStore <|-- MongoDBStore
     Query <|-- RDFStoreQuery
     Query <|-- RawDataStoreQuery
+    RDFStoreQuery <|-- SparqlQuery : implements
 ```
 
 ### Workflow

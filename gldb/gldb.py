@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 from .query import Query
+from .stores import DataStore
 from .stores import DataStoreManager
 
 logger = logging.getLogger("gldb")
@@ -15,6 +16,9 @@ class GenericLinkedDatabase(ABC):
     @abstractmethod
     def store_manager(self) -> DataStoreManager:
         """Returns the store manager."""
+
+    def __getitem__(self, store_name) -> DataStore:
+        return self.store_manager[store_name]
 
     @abstractmethod
     def linked_upload(self, filename: Union[str, pathlib.Path]):

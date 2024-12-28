@@ -35,9 +35,6 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
     def store_manager(self) -> DataStoreManager:
         return self._store_manager
 
-    def __getitem__(self, store_name) -> DataStore:
-        return self.store_manager[store_name]
-
     # @property
     # def datastore(self) -> CSVDatabase:
     #     return self._storage_db

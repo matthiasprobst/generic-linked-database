@@ -11,10 +11,10 @@ class RDFStoreQuery(Query, ABC):
 
 class SparqlQuery(RDFStoreQuery):
 
-    def __init__(self, sparql_query, *args, **kwargs):
+    def __init__(self, sparql_query: str, *args, **kwargs):
         self._args = args
         self._kwargs = kwargs
-        self._sparql_query = sparql_query
+        self.sparql_query = sparql_query
 
     def execute(self, graph: rdflib.Graph) -> rdflib.query.Result:
-        return graph.query(self._sparql_query, *self._args, **self._kwargs)
+        return graph.query(self.sparql_query, *self._args, **self._kwargs)
