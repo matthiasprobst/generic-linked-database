@@ -6,7 +6,9 @@ from typing import Union
 import rdflib
 
 
-class RDFDatabase(ABC):
+class RDFStore(ABC):
+    """Graph database interface."""
+
     namespaces = {
         "ex": "https://example.org/",
         "afn": "http://jena.apache.org/ARQ/function#",

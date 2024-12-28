@@ -2,10 +2,10 @@ import pathlib
 
 import pandas as pd
 
-from gldb import StorageDatabase
+from gldb import DataStore
 
 
-class CSVDatabase(StorageDatabase):
+class CSVDatabase(DataStore):
 
     def __init__(self):
         self._filenames = []

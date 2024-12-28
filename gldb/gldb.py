@@ -3,8 +3,8 @@ import pathlib
 from abc import ABC, abstractmethod
 from typing import Union
 
-from .metadata_db import RDFDatabase
-from .storage_db import StorageDatabase
+from .metadatastore import RDFStore
+from .datastore import DataStore
 
 logger = logging.getLogger("gldb")
 
@@ -13,12 +13,12 @@ class GenericLinkedDatabase(ABC):
 
     @property
     @abstractmethod
-    def metadata_db(self) -> RDFDatabase:
+    def metadata_db(self) -> RDFStore:
         """Returns the RDF Database (e.g. GraphDB)."""
 
     @property
     @abstractmethod
-    def storage_db(self) -> StorageDatabase:
+    def storage_db(self) -> DataStore:
         """Returns the core database which can be relational (e.g. MySQL) or non-relational (e.g. MongoDB)."""
 
     @abstractmethod

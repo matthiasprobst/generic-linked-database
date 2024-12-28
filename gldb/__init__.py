@@ -31,7 +31,7 @@ logger.addHandler(_stream_handler)
 logger.addHandler(_file_handler)
 
 from .gldb import GenericLinkedDatabase
-from .metadata_db import RDFDatabase
-from .storage_db import StorageDatabase
+from .metadatastore import RDFStore
+from .datastore import DataStore
 
-__all__ = ['GenericLinkedDatabase', 'RDFDatabase', 'StorageDatabase']
+__all__ = ['GenericLinkedDatabase', 'RDFStore', 'DataStore']

@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 
-class StorageDatabase(ABC):
-    """Relational or non-relational database interface."""
+class DataStore(ABC):
+    """Data store interface (concrete implementations can be sql or non sql databases)."""
 
     @abstractmethod
     def query(self, *args, **kwargs):

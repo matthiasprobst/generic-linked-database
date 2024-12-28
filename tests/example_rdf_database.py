@@ -2,10 +2,10 @@ import pathlib
 
 import rdflib
 
-from gldb import RDFDatabase
+from gldb import RDFStore
 
 
-class InMemoryRDFDatabase(RDFDatabase):
+class InMemoryRDFDatabase(RDFStore):
 
     def __init__(self):
         self._filenames = []
