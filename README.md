@@ -21,6 +21,7 @@ pip install generic-linked-database
 ### Abstractions
 
 The package provides the following abstractions:
+
 - `GenericLinkedDatabase`: The unified interface to interact with the semantic metadata and raw data storage
 - `RDFStore`: The interface to interact with the semantic metadata storage
 - `RawDataStore`: The interface to interact with the raw data storage
@@ -95,10 +96,8 @@ classDiagram
     RDFStoreQuery <|-- SparqlQuery : implements
 ```
 
-### Workflow
-
-
 ## TODO:
 
+- [x] Write Readme
 - [ ] Add documentation
-- [ ] Finish readme
+- [ ] Add examples
