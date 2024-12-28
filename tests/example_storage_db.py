@@ -2,11 +2,11 @@ import pathlib
 
 import pandas as pd
 
-from gldb import DataStore
+from gldb import RawDataStore
 from gldb.query import Query
 
 
-class CSVDatabase(DataStore):
+class CSVDatabase(RawDataStore):
 
     def __init__(self):
         self._filenames = []

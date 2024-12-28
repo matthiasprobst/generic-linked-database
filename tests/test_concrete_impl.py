@@ -9,6 +9,7 @@ import rdflib
 from gldb import GenericLinkedDatabase
 from gldb.federated_query_result import FederatedQueryResult
 from gldb.query.rdfstorequery import SparqlQuery
+from gldb.stores import DataStoreManager, DataStore
 
 logger = logging.getLogger("gldb")
 logger.setLevel(logging.DEBUG)
@@ -25,16 +26,21 @@ from example_storage_db import CSVDatabase
 class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
 
     def __init__(self):
-        self._metadata_db = InMemoryRDFDatabase()
-        self._storage_db = CSVDatabase()
+        _store_manager = DataStoreManager()
+        _store_manager.add_store("rdf_database", InMemoryRDFDatabase())
+        _store_manager.add_store("csv_database", CSVDatabase())
+        self._store_manager = _store_manager
 
     @property
-    def rdfstore(self) -> InMemoryRDFDatabase:
-        return self._metadata_db
+    def store_manager(self) -> DataStoreManager:
+        return self._store_manager
 
-    @property
-    def datastore(self) -> CSVDatabase:
-        return self._storage_db
+    def __getitem__(self, store_name) -> DataStore:
+        return self.store_manager[store_name]
+
+    # @property
+    # def datastore(self) -> CSVDatabase:
+    #     return self._storage_db
 
     def linked_upload(self, filename: Union[str, pathlib.Path]):
         raise NotImplemented("linked_upload not implemented")
@@ -54,7 +60,7 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
           ?distribution dcat:downloadURL ?url .
         }}
         """.format(date=date)
-        results = self.execute_query(SparqlQuery(sparql_query))
+        results = self["rdf_database"].execute_query(SparqlQuery(sparql_query))
 
         result_data = [{str(k): parse_literal(v) for k, v in binding.items()} for binding in results.bindings]
 
@@ -63,7 +69,7 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
         for res in result_data:
             filename = str(res["url"]).rsplit('/', 1)[-1]
 
-            data = self.datastore.get_all(filename)
+            data = self["csv_database"].get_all(filename)
 
             # query all metadata for the dataset:
             metadata_sparql = """
@@ -75,7 +81,7 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
               <{dataset}> ?p ?o .
             }}
             """.format(dataset=res["dataset"])
-            metadata_result = self.execute_query(SparqlQuery(metadata_sparql))
+            metadata_result = self["rdf_database"].execute_query(SparqlQuery(metadata_sparql))
             dataset_result_data = [{str(k): v for k, v in binding.items()} for binding in
                                    metadata_result.bindings]
             metadata = {d["p"]: d["o"] for d in dataset_result_data}
@@ -111,22 +117,26 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
 
 def test_concrete_impl():
     db = GenericLinkedDatabaseImpl()
-    db.rdfstore.upload_file(__this_dir__ / "data/data1.jsonld")
-    res = db.execute_query(SparqlQuery("SELECT * WHERE {?s ?p ?o}"))
+
+    rdf_database = db["rdf_database"]
+    csv_database = db["csv_database"]
+
+    rdf_database.upload_file(__this_dir__ / "data/data1.jsonld")
+    res = rdf_database.execute_query(SparqlQuery("SELECT * WHERE {?s ?p ?o}"))
     assert len(res) == 8, f"Expected 8 triples, got {len(res)}"
 
-    db.rdfstore.upload_file(__this_dir__ / "data/metadata.jsonld")
+    rdf_database.upload_file(__this_dir__ / "data/metadata.jsonld")
 
-    db.datastore.upload_file(__this_dir__ / "data/random_data.csv")
-    db.datastore.upload_file(__this_dir__ / "data/random_data.csv")
-    db.datastore.upload_file(__this_dir__ / "data/temperature.csv")
-    db.datastore.upload_file(__this_dir__ / "data/users.csv")
+    csv_database.upload_file(__this_dir__ / "data/random_data.csv")
+    csv_database.upload_file(__this_dir__ / "data/random_data.csv")
+    csv_database.upload_file(__this_dir__ / "data/temperature.csv")
+    csv_database.upload_file(__this_dir__ / "data/users.csv")
 
     data = db.get_temperature_data_by_date(date="2024-01-01")
 
     # data = db.plot_temperature_data_by_date(date="2024-01-01")
 
-    result = db.rdfstore.select(data[0].metadata["dcat:distribution"], serialization_format="json-ld", indent=4)
+    result = db["rdf_database"].select(data[0].metadata["dcat:distribution"], serialization_format="json-ld", indent=4)
     print(result)
 
 

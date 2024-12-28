@@ -5,10 +5,10 @@ from typing import Union
 
 import rdflib
 
-from .store import Store
+from .store import DataStore
 
 
-class RDFStore(Store, ABC):
+class RDFStore(DataStore, ABC):
     """Graph database interface."""
 
     namespaces = {

@@ -1,3 +1,2 @@
-from .store import Store
+from .store import DataStore, DataStoreManager
 from .metadatastore import RDFStore
-from .datastore import DataStore

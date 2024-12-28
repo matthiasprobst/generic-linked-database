@@ -18,74 +18,88 @@ pip install generic-linked-database
 
 ## Design
 
-```mermaid
-classDiagram
-    class GenericLinkedDatabase {
-        <<Abstract>>
-        +RDFStore rdfstore
-        +DataStore datastore
-        +linked_upload(filename: Union[str, pathlib.Path])
-        +execute_query(query: Query)
-    }
-
-    class Store {
-        <<Abstract>>
-        +execute_query(query: Query)
-        +expected_file_extensions
-        +upload_file(filename: Union[str, pathlib.Path]): bool
-    }
-
-    class RDFStore {
-        <<Abstract>>
-        +rdflib.Graph graph
-        +upload_file(filename: Union[str, pathlib.Path]): bool
-    }
-
-    class DataStore {
-        <<Abstract>>
-        +upload_file(filename: Union[str, pathlib.Path]): bool
-    }
-
-    class Query {
-        <<Abstract>>
-        +execute(*args, **kwargs)
-    }
-
-    class RDFStoreQuery {
-        <<Abstract>>
-    }
-
-    class SparqlQuery {
-        -sparql_query: str
-        +execute(graph: rdflib.Graph): rdflib.query.Result
-    }
-
-    class DataStoreQuery {
-        <<Abstract>>
-    }
-
-    GenericLinkedDatabase --> Store
-    GenericLinkedDatabase --> RDFStore
-    GenericLinkedDatabase --> DataStore
-    Store <|-- RDFStore
-    Store <|-- DataStore
-    Query <|-- RDFStoreQuery
-    Query <|-- DataStoreQuery
-    RDFStoreQuery <|-- SparqlQuery
-
-```
-
 ### Abstractions
 
 The package provides the following abstractions:
 - `GenericLinkedDatabase`: The unified interface to interact with the semantic metadata and raw data storage
 - `RDFStore`: The interface to interact with the semantic metadata storage
-- `DataStore`: The interface to interact with the raw data storage
+- `RawDataStore`: The interface to interact with the raw data storage
+- `DataStoreManager`: The manager to interact with the different data stores
+- `Query`: The interface to interact with the different data stores
+- `RDFStoreQuery`: The interface to interact with the semantic metadata storage
+- `RawDataStoreQuery`: The interface to interact with the raw data storage
 
-The user interacts with the database and can either interact with the metadata store, the data store or via a federated 
-query with both.
+### Class Diagram
 
-![Alt text](docs/figures/abstraction.svg)
+```mermaid
+classDiagram
+    class GenericLinkedDatabase {
+        <<abstract>>
+        +StoreManager store_manager
+        +linked_upload(filename)
+        +execute_query(store_name, query)
+    }
+
+    class DataStoreManager {
+        +stores: Dict
+        +add_store(store_name, store)
+        +get_store(store_name)
+        +execute_query(store_name, query)
+        +upload_file(store_name, filename)
+    }
+
+    class DataStore {
+        <<abstract>>
+        +execute_query(query)
+        +upload_file(filename)
+    }
+
+    class RDFStore {
+        <<abstract>>
+        +execute_query(query)
+        +upload_file(filename)
+    }
+
+    class RawDataStore {
+        <<abstract>>
+        +execute_query(query)
+        +upload_file(filename)
+    }
+
+    class GraphDBStore {
+        +execute_query(query)
+        +upload_file(filename)
+    }
+
+    class MongoDBStore {
+        +execute_query(query)
+        +upload_file(filename)
+    }
+
+    class Query {
+        <<abstract>>
+        +execute(*args, **kwargs)
+    }
+
+    class RDFStoreQuery {
+        <<abstract>>
+    }
+
+    class RawDataStoreQuery {
+        <<abstract>>
+    }
+
+    %% Relationships
+    GenericLinkedDatabase --> DataStoreManager
+    GenericLinkedDatabase --> Query
+    DataStoreManager --> DataStore
+    DataStore <|-- RDFStore
+    DataStore <|-- RawDataStore
+    RDFStore <|-- GraphDBStore
+    RawDataStore <|-- MongoDBStore
+    Query <|-- RDFStoreQuery
+    Query <|-- RawDataStoreQuery
+```
 
 ### Workflow
 

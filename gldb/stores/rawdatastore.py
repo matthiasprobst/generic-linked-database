@@ -2,10 +2,10 @@ import pathlib
 from abc import ABC, abstractmethod
 from typing import Union
 
-from .store import Store
+from .store import DataStore
 
 
-class DataStore(Store, ABC):
+class RawDataStore(DataStore, ABC):
     """Data store interface (concrete implementations can be sql or non sql databases)."""
 
     @abstractmethod
