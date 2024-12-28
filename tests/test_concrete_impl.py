@@ -27,23 +27,12 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
         self._metadata_db = InMemoryRDFDatabase()
         self._storage_db = CSVDatabase()
 
-    def upload_file(self, filename):
-        filename = pathlib.Path(filename)
-        assert filename.exists(), f"File {filename} does not exist."
-        if filename.suffix in (".ttl", ".rdf", ".jsonld"):
-            logger.info(f"Uploading file {filename} to the RDF database...")
-            return self.metadata_db.upload_file(filename)
-        return self.storage_db.upload_file(filename)
-
-    def info(self):
-        return f"GenericLinkedDatabaseImpl(metadata_db={self.metadata_db}, storage_db={self.storage_db})"
-
     @property
-    def metadata_db(self) -> InMemoryRDFDatabase:
+    def rdfstore(self) -> InMemoryRDFDatabase:
         return self._metadata_db
 
     @property
-    def storage_db(self) -> CSVDatabase:
+    def datastore(self) -> CSVDatabase:
         return self._storage_db
 
     def get_temperature_data_by_date(self, date: str) -> List[FederatedQueryResult]:
@@ -70,7 +59,7 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
         for res in result_data:
             filename = str(res["url"]).rsplit('/', 1)[-1]
 
-            data = self.storage_db.get_all(filename)
+            data = self.datastore.get_all(filename)
 
             # query all metadata for the dataset:
             metadata_sparql = """
@@ -133,7 +122,7 @@ def test_concrete_impl():
 
     # data = db.plot_temperature_data_by_date(date="2024-01-01")
 
-    result = db.metadata_db.select(data[0].metadata["dcat:distribution"], serialization_format="json-ld", indent=4)
+    result = db.rdfstore.select(data[0].metadata["dcat:distribution"], serialization_format="json-ld", indent=4)
     print(result)
 
 

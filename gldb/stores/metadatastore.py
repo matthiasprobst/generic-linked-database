@@ -5,8 +5,10 @@ from typing import Union
 
 import rdflib
 
+from .store import Store
 
-class RDFStore(ABC):
+
+class RDFStore(Store, ABC):
     """Graph database interface."""
 
     namespaces = {
@@ -51,7 +53,7 @@ class RDFStore(ABC):
         pass
 
     @abstractmethod
-    def upload_file(self, filename: Union[str, pathlib.Path]):
+    def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
         """Insert data into the data store."""
         pass
 

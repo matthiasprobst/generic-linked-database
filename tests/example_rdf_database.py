@@ -2,7 +2,8 @@ import pathlib
 
 import rdflib
 
-from gldb import RDFStore
+from gldb.query.rdfstorequery import SparqlQuery
+from gldb.stores import RDFStore
 
 
 class InMemoryRDFDatabase(RDFStore):
@@ -10,11 +11,23 @@ class InMemoryRDFDatabase(RDFStore):
     def __init__(self):
         self._filenames = []
         self._graphs = {}
+        self._expected_file_extensions = {".ttl", ".rdf", ".jsonld"}
 
-    def upload_file(self, filename):
+    @property
+    def expected_file_extensions(self):
+        return self._expected_file_extensions
+
+    def execute_query(self, query: SparqlQuery):
+        return query.execute(self.graph)
+
+    def upload_file(self, filename) -> bool:
         filename = pathlib.Path(filename)
-        assert filename.exists(), f"File {filename} does not exist."
+        if not filename.exists():
+            raise FileNotFoundError(f"File {filename} not found.")
+        if filename.suffix not in self._expected_file_extensions:
+            raise ValueError(f"File type {filename.suffix} not supported.")
         self._filenames.append(filename.resolve().absolute())
+        return True
 
     @property
     def graph(self) -> rdflib.Graph:
