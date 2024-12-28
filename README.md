@@ -66,16 +66,6 @@ classDiagram
         +upload_file(filename)
     }
 
-    class GraphDBStore {
-        +execute_query(query)
-        +upload_file(filename)
-    }
-
-    class MongoDBStore {
-        +execute_query(query)
-        +upload_file(filename)
-    }
-
     class Query {
         <<abstract>>
         +execute(*args, **kwargs)
