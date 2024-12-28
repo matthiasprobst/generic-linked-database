@@ -4,7 +4,8 @@
 [![codecov](https://codecov.io/gh/matthiasprobst/generic-linked-database/branch/main/graph/badge.svg?token=2ZFIX0Z1QW)](https://codecov.io/gh/matthiasprobst/generic-linked-database)
 ![pyvers Status](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)
 
-An approach to integrate linked semantic metadata and raw data storage behind a unified interface
+An approach to integrate multiple databases behind a unified interface. At least on database is intended to be 
+an RDF database for metadata storage, the others are raw data storages like SQL or noSQL databases.
 
 ## Quickstart
 
@@ -13,8 +14,15 @@ An approach to integrate linked semantic metadata and raw data storage behind a 
 Install the package:
 
 ```bash
-pip install generic-linked-database
+pip install gldb
 ```
+
+### Example
+
+An example exists as [Jupyter Notebook](docs/examples/Tutorial.ipynb) in `docs/examples/`. You may also try it online 
+with Google Colab:
+
+[![Open Quickstart Notebook](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/matthiasprobst/generic-linked-database/blob/main/docs/examples/Tutorial.ipynb)
 
 ## Design
 
@@ -96,8 +104,4 @@ classDiagram
     RDFStoreQuery <|-- SparqlQuery : implements
 ```
 
-## TODO:
 
-- [x] Write Readme
-- [ ] Add documentation
-- [ ] Add examples
