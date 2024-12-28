@@ -16,5 +16,8 @@ class SparqlQuery(RDFStoreQuery):
         self._kwargs = kwargs
         self.sparql_query = sparql_query
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.sparql_query!r})"
+
     def execute(self, graph: rdflib.Graph) -> rdflib.query.Result:
         return graph.query(self.sparql_query, *self._args, **self._kwargs)
