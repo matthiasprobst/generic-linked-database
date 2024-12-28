@@ -18,6 +18,14 @@ pip install generic-linked-database
 
 ## Design
 
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
+
 ### Abstractions
 
 The package provides the following abstractions:
