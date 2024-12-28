@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
 
-from gldb.stores import Store
-
 
 class Query(ABC):
 
     @abstractmethod
-    def execute(self, store: Store):
+    def execute(self, *args, **kwargs):
         """
         Executes the query on the given store.
 

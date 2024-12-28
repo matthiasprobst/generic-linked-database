@@ -2,7 +2,7 @@ import json
 import logging
 import pathlib
 import sys
-from typing import List
+from typing import List, Union
 
 import rdflib
 
@@ -34,6 +34,9 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
     @property
     def datastore(self) -> CSVDatabase:
         return self._storage_db
+
+    def linked_upload(self, filename: Union[str, pathlib.Path]):
+        raise NotImplemented("linked_upload not implemented")
 
     def get_temperature_data_by_date(self, date: str) -> List[FederatedQueryResult]:
         """High-level abstraction for user to find temperature data.
@@ -107,16 +110,16 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
 
 def test_concrete_impl():
     db = GenericLinkedDatabaseImpl()
-    db.upload_file(__this_dir__ / "data/data1.jsonld")
+    db.rdfstore.upload_file(__this_dir__ / "data/data1.jsonld")
     res = db.sparql("SELECT * WHERE {?s ?p ?o}")
     assert len(res) == 8, f"Expected 8 triples, got {len(res)}"
 
-    db.upload_file(__this_dir__ / "data/metadata.jsonld")
+    db.rdfstore.upload_file(__this_dir__ / "data/metadata.jsonld")
 
-    db.upload_file(__this_dir__ / "data/random_data.csv")
-    db.upload_file(__this_dir__ / "data/random_data.csv")
-    db.upload_file(__this_dir__ / "data/temperature.csv")
-    db.upload_file(__this_dir__ / "data/users.csv")
+    db.datastore.upload_file(__this_dir__ / "data/random_data.csv")
+    db.datastore.upload_file(__this_dir__ / "data/random_data.csv")
+    db.datastore.upload_file(__this_dir__ / "data/temperature.csv")
+    db.datastore.upload_file(__this_dir__ / "data/users.csv")
 
     data = db.get_temperature_data_by_date(date="2024-01-01")
 

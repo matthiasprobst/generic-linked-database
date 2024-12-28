@@ -1,6 +1,5 @@
 import logging
 import pathlib
-import warnings
 from abc import ABC, abstractmethod
 from typing import Union
 
@@ -25,16 +24,9 @@ class GenericLinkedDatabase(ABC):
     def datastore(self) -> DataStore:
         """Returns the core database which can be relational (e.g. MySQL) or non-relational (e.g. MongoDB)."""
 
-    def upload_file(self, filename: Union[str, pathlib.Path]):
-        filename = pathlib.Path(filename)
-        success = False
-        if filename.suffix in self.rdfstore.expected_file_extensions:
-            success = self.rdfstore.upload_file(filename)
-        if filename.suffix in self.datastore.expected_file_extensions:
-            success = self.datastore.upload_file(filename)
-        if not success:
-            warnings.warn(f"File type {filename.suffix} not supported.")
-        return success
+    @abstractmethod
+    def linked_upload(self, filename: Union[str, pathlib.Path]):
+        """Uploads the file to both stores and links them."""
 
     def execute_query(self, query: Query):
         if isinstance(query, RDFStoreQuery):
