@@ -1,4 +1,6 @@
+import pathlib
 from abc import ABC, abstractmethod
+from typing import Union
 
 
 class Store(ABC):
@@ -14,5 +16,5 @@ class Store(ABC):
         """Returns the expected file extensions for the uploader."""
 
     @abstractmethod
-    def upload_file(self):
+    def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
         """Uploads a file to the store."""

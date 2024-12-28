@@ -8,6 +8,7 @@ import rdflib
 
 from gldb import GenericLinkedDatabase
 from gldb.federated_query_result import FederatedQueryResult
+from gldb.query.rdfstorequery import SparqlQuery
 
 logger = logging.getLogger("gldb")
 logger.setLevel(logging.DEBUG)
@@ -53,7 +54,7 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
           ?distribution dcat:downloadURL ?url .
         }}
         """.format(date=date)
-        results = self.sparql(sparql_query)
+        results = self.execute_query(SparqlQuery(sparql_query))
 
         result_data = [{str(k): parse_literal(v) for k, v in binding.items()} for binding in results.bindings]
 
@@ -74,7 +75,7 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
               <{dataset}> ?p ?o .
             }}
             """.format(dataset=res["dataset"])
-            metadata_result = self.sparql(metadata_sparql)
+            metadata_result = self.execute_query(SparqlQuery(metadata_sparql))
             dataset_result_data = [{str(k): v for k, v in binding.items()} for binding in
                                    metadata_result.bindings]
             metadata = {d["p"]: d["o"] for d in dataset_result_data}
@@ -111,7 +112,7 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
 def test_concrete_impl():
     db = GenericLinkedDatabaseImpl()
     db.rdfstore.upload_file(__this_dir__ / "data/data1.jsonld")
-    res = db.sparql("SELECT * WHERE {?s ?p ?o}")
+    res = db.execute_query(SparqlQuery("SELECT * WHERE {?s ?p ?o}"))
     assert len(res) == 8, f"Expected 8 triples, got {len(res)}"
 
     db.rdfstore.upload_file(__this_dir__ / "data/metadata.jsonld")

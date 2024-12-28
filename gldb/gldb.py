@@ -35,7 +35,3 @@ class GenericLinkedDatabase(ABC):
             return self.datastore.execute_query(query)
         else:
             raise ValueError(f"Query type {type(query)} not supported.")
-
-    def sparql(self, sparql_query: str):
-        logger.debug("Performing sparql query...")
-        return self.rdfstore.graph.query(sparql_query)

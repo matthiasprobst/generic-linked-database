@@ -19,11 +19,60 @@ pip install generic-linked-database
 ## Design
 
 ```mermaid
-  graph TD;
-      A-->B;
-      A-->C;
-      B-->D;
-      C-->D;
+classDiagram
+    class GenericLinkedDatabase {
+        <<Abstract>>
+        +RDFStore rdfstore
+        +DataStore datastore
+        +linked_upload(filename: Union[str, pathlib.Path])
+        +execute_query(query: Query)
+    }
+
+    class Store {
+        <<Abstract>>
+        +execute_query(query: Query)
+        +expected_file_extensions
+        +upload_file(filename: Union[str, pathlib.Path]): bool
+    }
+
+    class RDFStore {
+        <<Abstract>>
+        +rdflib.Graph graph
+        +upload_file(filename: Union[str, pathlib.Path]): bool
+    }
+
+    class DataStore {
+        <<Abstract>>
+        +upload_file(filename: Union[str, pathlib.Path]): bool
+    }
+
+    class Query {
+        <<Abstract>>
+        +execute(*args, **kwargs)
+    }
+
+    class RDFStoreQuery {
+        <<Abstract>>
+    }
+
+    class SparqlQuery {
+        -sparql_query: str
+        +execute(graph: rdflib.Graph): rdflib.query.Result
+    }
+
+    class DataStoreQuery {
+        <<Abstract>>
+    }
+
+    GenericLinkedDatabase --> Store
+    GenericLinkedDatabase --> RDFStore
+    GenericLinkedDatabase --> DataStore
+    Store <|-- RDFStore
+    Store <|-- DataStore
+    Query <|-- RDFStoreQuery
+    Query <|-- DataStoreQuery
+    RDFStoreQuery <|-- SparqlQuery
+
 ```
 
 ### Abstractions
