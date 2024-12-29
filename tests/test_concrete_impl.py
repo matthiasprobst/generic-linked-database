@@ -9,7 +9,7 @@ import rdflib
 from gldb import GenericLinkedDatabase
 from gldb.federated_query_result import FederatedQueryResult
 from gldb.query.rdfstorequery import SparqlQuery
-from gldb.stores import DataStoreManager, DataStore
+from gldb.stores import DataStoreManager
 
 logger = logging.getLogger("gldb")
 logger.setLevel(logging.DEBUG)
@@ -130,11 +130,6 @@ def test_concrete_impl():
     csv_database.upload_file(__this_dir__ / "data/users.csv")
 
     data = db.get_temperature_data_by_date(date="2024-01-01")
-
-    # data = db.plot_temperature_data_by_date(date="2024-01-01")
-
-    result = db["rdf_database"].select(data[0].metadata["dcat:distribution"], serialization_format="json-ld", indent=4)
-    print(result)
 
 
 def parse_literal(literal):
