@@ -1,4 +1,3 @@
-import json
 import pathlib
 from abc import ABC, abstractmethod
 from typing import Union
@@ -56,40 +55,3 @@ class RDFStore(DataStore, ABC):
     def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
         """Insert data into the data store."""
         pass
-
-    def select(self, item: str, serialization_format="json-ld", **kwargs) -> str:
-        if item.startswith("http"):
-            _item = f"<{item}>"
-        else:
-            prefix, name = item.split(":", 1)
-            _item = f"<{self.namespaces[prefix]}{name}>"
-
-        prefixes = "\n".join([f"PREFIX {k}: <{v}>" for k, v in self.namespaces.items()])
-        sparql_query = f"{prefixes}\nSELECT * WHERE {{ {_item} ?p ?o }}"
-
-        result = self.graph.query(sparql_query)
-        result_data = [{str(k): v for k, v in binding.items()} for binding in result.bindings]
-        metadata = {d["p"]: d["o"] for d in result_data}
-
-        g = rdflib.Graph()
-        for k, v in metadata.items():
-            if isinstance(v, str) and v.startswith("http"):
-                v = rdflib.URIRef(v)
-            g.add((rdflib.URIRef(item), rdflib.URIRef(k), v))
-
-        if "context" in kwargs:
-            _context = self.namespaces.copy()
-            _context.update(kwargs["context"])
-            kwargs["context"] = _context
-        else:
-            kwargs["context"] = self.namespaces
-
-        serialized = g.serialize(format=serialization_format, **kwargs)
-        if serialization_format == "json-ld":
-            deserialized = json.loads(serialized)
-            for k, v in deserialized.items():
-                if isinstance(v, dict):
-                    if len(v) == 1 and "@id" in v:
-                        deserialized[k] = v["@id"]
-            return json.dumps(deserialized, indent=kwargs.get("indent", None))
-        return serialized

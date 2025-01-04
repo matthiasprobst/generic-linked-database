@@ -3,18 +3,15 @@ from abc import ABC, abstractmethod
 from typing import Dict
 from typing import Union
 
+from gldb.query import Query, QueryResult
+
 
 class DataStore(ABC):
     """Store interface."""
 
     @abstractmethod
-    def execute_query(self, query: 'Query'):
+    def execute_query(self, query: Query) -> QueryResult:
         """Executes the query on the store."""
-
-    @property
-    @abstractmethod
-    def expected_file_extensions(self):
-        """Returns the expected file extensions for the uploader."""
 
     @abstractmethod
     def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
@@ -39,7 +36,7 @@ class DataStoreManager:
         """Retrieve a store from the manager."""
         return self.stores[store_name]
 
-    def execute_query(self, store_name: str, query: 'Query'):
+    def execute_query(self, store_name: str, query: Query) -> QueryResult:
         """Executes a query on a specific store."""
         store = self.get_store(store_name)
         if store:
