@@ -65,19 +65,25 @@ classDiagram
 
     class RDFStore {
         <<abstract>>
-        +execute_query(query)
+        +execute_query(query) QueryResult
         +upload_file(filename)
     }
 
     class RawDataStore {
         <<abstract>>
-        +execute_query(query)
+        +execute_query(query) QueryResult
         +upload_file(filename)
     }
 
     class Query {
+        +description: str
         <<abstract>>
-        +execute(*args, **kwargs)
+        +execute(*args, **kwargs) QueryResult
+    }
+
+    class QueryResult {
+        query: Query
+        result: Any
     }
 
     class RDFStoreQuery {
@@ -90,7 +96,7 @@ classDiagram
     
     class SparqlQuery {
         +sparql_query: str
-        +execute(graph: rdflib.Graph)
+        +execute(graph: rdflib.Graph) QueryResult
     }
 
     %% Relationships
