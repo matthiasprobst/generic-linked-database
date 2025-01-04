@@ -2,12 +2,12 @@ import json
 import logging
 import pathlib
 import sys
+import unittest
 from typing import List, Union
 
 import rdflib
 
 from gldb import GenericLinkedDatabase
-from gldb.federated_query_result import FederatedQueryResult
 from gldb.query.rdfstorequery import SparqlQuery
 from gldb.stores import DataStoreManager
 
@@ -21,6 +21,15 @@ __this_dir__ = pathlib.Path(__file__).parent
 sys.path.insert(0, str(__this_dir__))
 from example_rdf_database import InMemoryRDFDatabase
 from example_storage_db import CSVDatabase
+
+from dataclasses import dataclass
+from typing import Any, Dict
+
+
+@dataclass(frozen=True)
+class FederatedQueryResult:
+    data: Any
+    metadata: Dict
 
 
 class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
@@ -99,38 +108,6 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
 
         return federated_query_results
 
-    # def plot_temperature_data_by_date(self, date: str):
-    #     datasets = self.get_temperature_data_by_date(date)
-    #     plt.figure()
-    #     for dataset in datasets:
-    #         print("metadata of the plot: \n", json.dumps(dataset.metadata, indent=4))
-    #         dataset.data.plot(x='timestamp', y='temperature', label=f"date={date}", ax=plt.gca())
-    #     plt.xlabel('Time')
-    #     plt.ylabel('Temperature')
-    #     plt.legend()
-    #     plt.show()
-    #     return datasets
-
-
-def test_concrete_impl():
-    db = GenericLinkedDatabaseImpl()
-
-    rdf_database = db["rdf_database"]
-    csv_database = db["csv_database"]
-
-    rdf_database.upload_file(__this_dir__ / "data/data1.jsonld")
-    res = rdf_database.execute_query(SparqlQuery("SELECT * WHERE {?s ?p ?o}"))
-    assert len(res) == 8, f"Expected 8 triples, got {len(res)}"
-
-    rdf_database.upload_file(__this_dir__ / "data/metadata.jsonld")
-
-    csv_database.upload_file(__this_dir__ / "data/random_data.csv")
-    csv_database.upload_file(__this_dir__ / "data/random_data.csv")
-    csv_database.upload_file(__this_dir__ / "data/temperature.csv")
-    csv_database.upload_file(__this_dir__ / "data/users.csv")
-
-    data = db.get_temperature_data_by_date(date="2024-01-01")
-
 
 def parse_literal(literal):
     if isinstance(literal, rdflib.Literal):
@@ -140,5 +117,29 @@ def parse_literal(literal):
     return literal
 
 
-if __name__ == "__main__":
-    test_concrete_impl()
+class TestVersion(unittest.TestCase):
+
+    def test_concrete_impl(self):
+        db = GenericLinkedDatabaseImpl()
+
+        rdf_database = db["rdf_database"]
+        csv_database = db["csv_database"]
+
+        rdf_database.upload_file(__this_dir__ / "data/data1.jsonld")
+        query = SparqlQuery("SELECT * WHERE {?s ?p ?o}", description="Selects all triples")
+        self.assertEqual(query.description, "Selects all triples")
+        res = rdf_database.execute_query(query)
+
+        self.assertEqual(8, len(res))
+        self.assertEqual(len(res.result), len(res))
+
+        rdf_database.upload_file(__this_dir__ / "data/metadata.jsonld")
+
+        csv_database.upload_file(__this_dir__ / "data/random_data.csv")
+        csv_database.upload_file(__this_dir__ / "data/random_data.csv")
+        csv_database.upload_file(__this_dir__ / "data/temperature.csv")
+        csv_database.upload_file(__this_dir__ / "data/users.csv")
+
+        data = db.get_temperature_data_by_date(date="2024-01-01")
+        self.assertIsInstance(data, list)
+        self.assertIsInstance(data[0], FederatedQueryResult)

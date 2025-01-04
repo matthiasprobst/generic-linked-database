@@ -3,7 +3,7 @@ import pathlib
 from abc import ABC, abstractmethod
 from typing import Union
 
-from .query import Query
+from .query import Query, QueryResult
 from .stores import DataStore
 from .stores import DataStoreManager
 
@@ -24,5 +24,5 @@ class GenericLinkedDatabase(ABC):
     def linked_upload(self, filename: Union[str, pathlib.Path]):
         """Uploads the file to both stores and links them."""
 
-    def execute_query(self, store_name: str, query: Query):
+    def execute_query(self, store_name: str, query: Query) -> QueryResult:
         return self.store_manager.execute_query(store_name, query)
