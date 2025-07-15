@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.2.1
+
+- update setuptools to >=78.1.1 for security reasons
+
 ## v1.2.0
 
 - introduce `SparqlResult` as return value of query execution

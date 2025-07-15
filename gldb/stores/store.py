@@ -1,7 +1,6 @@
 import pathlib
 from abc import ABC, abstractmethod
-from typing import Dict
-from typing import Union
+from typing import Dict, Union, Any
 
 from gldb.query import Query, QueryResult
 
@@ -14,7 +13,7 @@ class DataStore(ABC):
         """Executes the query on the store."""
 
     @abstractmethod
-    def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
+    def upload_file(self, filename: Union[str, pathlib.Path]) -> Any:
         """Uploads a file to the store."""
 
 
