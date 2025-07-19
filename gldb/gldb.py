@@ -13,16 +13,16 @@ class GenericLinkedDatabase:
 
     def __init__(
             self,
-            data_stores: Dict[str, Store]
+            stores: Dict[str, Store]
     ):
         self._store_managers = StoreManager()
-        for data_store_name, data_store in data_stores.items():
-            if not isinstance(data_store, Store):
-                raise TypeError(f"Expected Store, got {type(data_store)}")
-            if data_store_name in self._store_managers.stores:
-                raise ValueError(f"DataStore with name {data_store_name} already exists.")
-            logger.debug(f"Adding store {data_store_name} to the database.")
-            self._store_managers.add_store(data_store_name, data_store)
+        for store_name, store in stores.items():
+            if not isinstance(store, Store):
+                raise TypeError(f"Expected Store, got {type(store)}")
+            if store_name in self._store_managers.stores:
+                raise ValueError(f"DataStore with name {store_name} already exists.")
+            logger.debug(f"Adding store {store_name} to the database.")
+            self._store_managers.add_store(store_name, v)
 
     @property
     @abstractmethod
