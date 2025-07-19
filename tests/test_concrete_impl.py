@@ -8,7 +8,6 @@ from typing import List, Union
 import rdflib
 
 from gldb import GenericLinkedDatabase
-from gldb.query.rdfstorequery import SparqlQuery
 from gldb.query import QueryResult
 from gldb.stores import StoreManager
 

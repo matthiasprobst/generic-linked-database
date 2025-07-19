@@ -5,11 +5,11 @@ import rdflib
 from gldb.query.query import Query, QueryResult
 
 
-class RDFStoreQuery(Query, ABC):
+class MetadataStoreQuery(Query, ABC):
     """RDF Store Query interface."""
 
 
-class SparqlQuery(RDFStoreQuery):
+class SparqlQuery(MetadataStoreQuery):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.query!r})"

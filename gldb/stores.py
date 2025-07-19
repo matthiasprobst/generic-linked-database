@@ -4,8 +4,8 @@ from typing import Dict, Union, Any, Type
 
 import rdflib
 
-from gldb.query import Query, QueryResult
-from gldb.query.rdfstorequery import SparqlQuery
+from gldb.query import Query
+from gldb.query.metadata_query import SparqlQuery
 
 
 class Store(ABC):
