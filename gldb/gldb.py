@@ -1,7 +1,5 @@
 import logging
-import pathlib
-from abc import abstractmethod
-from typing import Union, Dict
+from typing import Dict
 
 from .query import Query, QueryResult
 from .stores import Store, DataStore, StoreManager, MetadataStore
@@ -25,9 +23,9 @@ class GenericLinkedDatabase:
             self._store_managers.add_store(store_name, v)
 
     @property
-    @abstractmethod
     def store_manager(self) -> StoreManager:
         """Returns the store manager."""
+        return self._store_managers
 
     @property
     def data_stores(self) -> Dict[str, DataStore]:
@@ -42,9 +40,9 @@ class GenericLinkedDatabase:
     def __getitem__(self, store_name) -> Store:
         return self.store_manager[store_name]
 
-    @abstractmethod
-    def linked_upload(self, filename: Union[str, pathlib.Path]):
-        """Uploads the file to both stores and links them."""
+    # @abstractmethod
+    # def linked_upload(self, filename: Union[str, pathlib.Path]):
+    #     """Uploads the file to both stores and links them."""
 
     def execute_query(self, store_name: str, query: Query) -> QueryResult:
         return self.store_manager.execute_query(store_name, query)
