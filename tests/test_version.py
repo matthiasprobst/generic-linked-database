@@ -1,7 +1,7 @@
 import json
 import pathlib
 import unittest
-
+from datetime import datetime
 from gldb import __version__
 
 
@@ -38,10 +38,16 @@ class TestVersion(unittest.TestCase):
     def test_citation_cff(self):
         """checking if the version in CITATION.cff is the same as the one of the ssnolib"""
         this_version = 'x.x.x'
+        dt = None
         setupcfg_filename = __this_dir__ / '../CITATION.cff'
         with open(setupcfg_filename, 'r') as f:
             lines = f.readlines()
             for line in lines:
-                if 'version: ' in line:
+                if 'version:' in line:
                     this_version = line.split(':')[-1].strip()
+                elif 'date-released:' in line:
+                    # check if the date is the same as the one in codemeta.json
+                    date_str = line.split(':')[-1].strip()
+                    dt = datetime.strptime(date_str, '%Y-%m-%d')
         self.assertEqual(__version__, this_version)
+        self.assertEqual(dt.strftime('%Y-%m-%d'), datetime.now().date().strftime('%Y-%m-%d'))

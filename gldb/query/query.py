@@ -4,20 +4,24 @@ from typing import Any
 
 class AbstractQuery(ABC):
 
-    @property
-    @abstractmethod
-    def description(self):
-        """Returns a description of the query."""
+    def __init__(self, query: str,
+                 description: str = None,
+                 *args,
+                 **kwargs):
+        self.query = query
+        self.description = description
+        self._args = args
+        self._kwargs = kwargs
 
 
 class QueryResult:
 
-    def __init__(self, query: AbstractQuery, result: Any):
+    def __init__(self, query: AbstractQuery, data: Any):
         self.query = query
-        self.result = result
+        self.data = data
 
     def __len__(self):
-        return len(self.result)
+        return len(self.data)
 
 
 class Query(AbstractQuery, ABC):

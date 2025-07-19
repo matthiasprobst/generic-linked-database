@@ -2,11 +2,10 @@ import pathlib
 
 import rdflib
 
-from gldb.query.rdfstorequery import SparqlQuery
-from gldb.stores import RDFStore
+from gldb.stores import MetadataStore
 
 
-class InMemoryRDFDatabase(RDFStore):
+class InMemoryRDFDatabase(MetadataStore):
 
     def __init__(self):
         self._filenames = []
@@ -17,8 +16,8 @@ class InMemoryRDFDatabase(RDFStore):
     def expected_file_extensions(self):
         return self._expected_file_extensions
 
-    def execute_query(self, query: SparqlQuery):
-        return query.execute(self.graph)
+    # def execute_query(self, query: SparqlQuery):
+    #     return query.execute(self.graph)
 
     def upload_file(self, filename) -> bool:
         filename = pathlib.Path(filename)

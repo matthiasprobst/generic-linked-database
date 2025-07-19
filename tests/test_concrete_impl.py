@@ -9,7 +9,8 @@ import rdflib
 
 from gldb import GenericLinkedDatabase
 from gldb.query.rdfstorequery import SparqlQuery
-from gldb.stores import DataStoreManager
+from gldb.query import QueryResult
+from gldb.stores import StoreManager
 
 logger = logging.getLogger("gldb")
 logger.setLevel(logging.DEBUG)
@@ -35,13 +36,13 @@ class FederatedQueryResult:
 class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
 
     def __init__(self):
-        _store_manager = DataStoreManager()
+        _store_manager = StoreManager()
         _store_manager.add_store("rdf_database", InMemoryRDFDatabase())
         _store_manager.add_store("csv_database", CSVDatabase())
         self._store_manager = _store_manager
 
     @property
-    def store_manager(self) -> DataStoreManager:
+    def store_manager(self) -> StoreManager:
         return self._store_manager
 
     # @property
@@ -66,12 +67,15 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
           ?distribution dcat:downloadURL ?url .
         }}
         """.format(date=date)
-        results = self["rdf_database"].execute_query(SparqlQuery(sparql_query))
+        # results = self["rdf_database"].execute_query(SparqlQuery(sparql_query))
+        _store = self["rdf_database"]
+        results = _store.query(sparql_query).execute(_store.graph)
 
-        result_data = [{str(k): parse_literal(v) for k, v in binding.items()} for binding in results.bindings]
+        result_data = [{str(k): parse_literal(v) for k, v in binding.items()} for binding in results.data.bindings]
 
         federated_query_results = []
 
+        rdf_database = self["rdf_database"]
         for res in result_data:
             filename = str(res["url"]).rsplit('/', 1)[-1]
 
@@ -87,9 +91,9 @@ class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
               <{dataset}> ?p ?o .
             }}
             """.format(dataset=res["dataset"])
-            metadata_result = self["rdf_database"].execute_query(SparqlQuery(metadata_sparql))
+            metadata_result = rdf_database.query(metadata_sparql).execute(rdf_database.graph)
             dataset_result_data = [{str(k): v for k, v in binding.items()} for binding in
-                                   metadata_result.bindings]
+                                   metadata_result.data.bindings]
             metadata = {d["p"]: d["o"] for d in dataset_result_data}
             context = {"dcterms": "http://purl.org/dc/terms/", "dcat": "http://www.w3.org/ns/dcat#",
                        "ex": "https://example.org/"}
@@ -126,12 +130,12 @@ class TestVersion(unittest.TestCase):
         csv_database = db["csv_database"]
 
         rdf_database.upload_file(__this_dir__ / "data/data1.jsonld")
-        query = SparqlQuery("SELECT * WHERE {?s ?p ?o}", description="Selects all triples")
-        self.assertEqual(query.description, "Selects all triples")
-        res = rdf_database.execute_query(query)
-
+        q = rdf_database.query(query="SELECT * WHERE {?s ?p ?o}", description="Selects all triples")
+        self.assertEqual(q.description, "Selects all triples")
+        res = q.execute(graph=rdf_database.graph)
+        self.assertIsInstance(res, QueryResult)
         self.assertEqual(8, len(res))
-        self.assertEqual(len(res.result), len(res))
+        self.assertEqual(len(res.data), len(res))
 
         rdf_database.upload_file(__this_dir__ / "data/metadata.jsonld")
 

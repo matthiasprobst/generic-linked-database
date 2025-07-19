@@ -1,17 +1,31 @@
 import pathlib
+from typing import Type
 
 import pandas as pd
 
-from gldb import RawDataStore
+from gldb import DataStore
 from gldb.query import Query
 
 
-class CSVDatabase(RawDataStore):
+class CSVDbQuery(Query):
+    def __init__(self, query: str, description: str = None):
+        super().__init__(query, description)
+        self.query = query
+
+    def execute(self, *args, **kwargs):
+        raise NotImplementedError("CSVDbQuery does not support execution.")
+
+
+class CSVDatabase(DataStore):
 
     def __init__(self):
         self._filenames = []
         self.tables = {}
         self._expected_file_extensions = {".csv", }
+
+    @property
+    def query(self) -> Type[CSVDbQuery]:
+        return CSVDbQuery
 
     @property
     def expected_file_extensions(self):
