@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any
+
+from dataclasses import dataclass
+from typing import Any, Dict
 
 
 class AbstractQuery(ABC):
@@ -22,6 +24,12 @@ class QueryResult:
 
     def __len__(self):
         return len(self.data)
+
+
+@dataclass(frozen=True)
+class FederatedQueryResult:
+    data: Any
+    metadata: Dict
 
 
 class Query(AbstractQuery, ABC):

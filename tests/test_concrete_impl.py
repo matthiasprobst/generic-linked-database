@@ -8,7 +8,7 @@ from typing import List, Union
 import rdflib
 
 from gldb import GenericLinkedDatabase
-from gldb.query import QueryResult
+from gldb.query import QueryResult, FederatedQueryResult
 from gldb.stores import StoreManager
 
 logger = logging.getLogger("gldb")
@@ -21,15 +21,6 @@ __this_dir__ = pathlib.Path(__file__).parent
 sys.path.insert(0, str(__this_dir__))
 from example_rdf_database import InMemoryRDFDatabase
 from example_storage_db import CSVDatabase
-
-from dataclasses import dataclass
-from typing import Any, Dict
-
-
-@dataclass(frozen=True)
-class FederatedQueryResult:
-    data: Any
-    metadata: Dict
 
 
 class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
