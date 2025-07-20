@@ -4,8 +4,15 @@
 [![codecov](https://codecov.io/gh/matthiasprobst/generic-linked-database/branch/main/graph/badge.svg?token=2ZFIX0Z1QW)](https://codecov.io/gh/matthiasprobst/generic-linked-database)
 ![pyvers Status](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
 
-An approach to integrate multiple databases behind a unified interface. At least on database is intended to be 
-an RDF database for metadata storage, the others are raw data storages like SQL or noSQL databases.
+An approach to integrate multiple databases behind a unified interface.
+
+Consider the following scenario: You have SQL database or a file database of CSV files, however, these data are missing
+metadata.
+Your metadata is stored in a separate RDF database. So your actual database are in two different databases, one for the
+data and one for the metadata.
+
+Using `gldb`, you can access both databases through a unified interface. This allows you to query the data and metadata
+together in a simple way.
 
 ## Quickstart
 

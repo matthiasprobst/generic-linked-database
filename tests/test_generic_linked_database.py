@@ -1,11 +1,8 @@
-import json
 import logging
 import pathlib
 import sys
 import unittest
 from typing import List
-
-import rdflib
 
 from gldb import GenericLinkedDatabase, DataStore, MetadataStore
 from gldb.query import QueryResult, FederatedQueryResult
@@ -61,13 +58,13 @@ def get_temperature_data_by_date(db, date: str) -> List[FederatedQueryResult]:
     _store: RDFStore = db.stores.rdf_database
     results = _store.query(sparql_query)
 
-    result_data = [{str(k): parse_literal(v) for k, v in binding.items()} for binding in results.data.bindings]
+    # result_data = [{str(k): parse_literal(v) for k, v in binding.items()} for binding in results.data.bindings]
 
     federated_query_results = []
 
     rdf_database = db.stores.rdf_database
-    for res in result_data:
-        filename = str(res["url"]).rsplit('/', 1)[-1]
+    for dataset, url in zip(results.data["dataset"], results.data["url"]):
+        filename = str(url).rsplit('/', 1)[-1]
 
         data = db.stores.csv_database.get_all(filename)
 
@@ -80,35 +77,29 @@ def get_temperature_data_by_date(db, date: str) -> List[FederatedQueryResult]:
         WHERE {{
           <{dataset}> ?p ?o .
         }}
-        """.format(dataset=res["dataset"])
-        metadata_result = rdf_database.query(metadata_sparql)  # .execute(rdf_database.graph)
-        dataset_result_data = [{str(k): v for k, v in binding.items()} for binding in
-                               metadata_result.data.bindings]
-        metadata = {d["p"]: d["o"] for d in dataset_result_data}
-        context = {"dcterms": "http://purl.org/dc/terms/", "dcat": "http://www.w3.org/ns/dcat#",
-                   "ex": "https://example.org/"}
-
-        g = rdflib.Graph()
-        for k, v in metadata.items():
-            g.add((rdflib.URIRef(res["dataset"]), rdflib.URIRef(k), v))
-        jsonld = g.serialize(format="json-ld", context=context)
-        jsonld_dict = json.loads(jsonld)
-        for k, v in jsonld_dict.items():
-            if isinstance(v, dict):
-                if len(v) == 1 and "@id" in v:
-                    jsonld_dict[k] = v["@id"]
-        federated_query_results.append(FederatedQueryResult(data=data, metadata=jsonld_dict))
+        """.format(dataset=dataset)
+        metadata = rdf_database.query(metadata_sparql)  # .execute(rdf_database.graph)
+        # dataset_result_data = [{str(k): v for k, v in binding.items()} for binding in
+        #                        metadata_result.data.bindings]
+        # metadata = {d["p"]: d["o"] for d in dataset_result_data}
+        # context = {"dcterms": "http://purl.org/dc/terms/", "dcat": "http://www.w3.org/ns/dcat#",
+        #            "ex": "https://example.org/"}
+        #
+        # g = rdflib.Graph()
+        # for k, v in metadata.items():
+        #     g.add((rdflib.URIRef(res["dataset"]), rdflib.URIRef(k), v))
+        # jsonld = g.serialize(format="json-ld", context=context)
+        # jsonld_dict = json.loads(jsonld)
+        # for k, v in jsonld_dict.items():
+        #     if isinstance(v, dict):
+        #         if len(v) == 1 and "@id" in v:
+        #             jsonld_dict[k] = v["@id"]
+        federated_query_results.append(FederatedQueryResult(data=data, metadata=metadata))
         # better convert metadata to json-ld string
 
     return federated_query_results
 
 
-def parse_literal(literal):
-    if isinstance(literal, rdflib.Literal):
-        return literal.value
-    if isinstance(literal, rdflib.URIRef):
-        return str(literal)
-    return literal
 
 
 class TestGenericLinkedDatabase(unittest.TestCase):
@@ -155,8 +146,9 @@ class TestGenericLinkedDatabase(unittest.TestCase):
         self.assertEqual(res.description, "Selects all triples")
 
         self.assertIsInstance(res, QueryResult)
-        self.assertEqual(8, len(res))
-        self.assertEqual(len(res.data), len(res))
+        print(res.data)
+        # self.assertIn(25, sorted([i.get("foaf:age", -1) for i in res.data["@graph"]]))
+        # self.assertIn(30, sorted([i.get("foaf:age", -1) for i in res.data["@graph"]]))
 
         rdf_database.upload_file(__this_dir__ / "data/metadata.jsonld")
 

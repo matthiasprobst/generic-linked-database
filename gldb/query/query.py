@@ -6,14 +6,6 @@ from typing import Any, Dict
 
 class AbstractQuery(ABC):
     pass
-    # def __init__(self, query: str,
-    #              description: str = None,
-    #              *args,
-    #              **kwargs):
-    #     self.query = query
-    #     self.description = description
-    #     self._args = args
-    #     self._kwargs = kwargs
 
 
 class QueryResult:
