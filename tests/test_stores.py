@@ -1,10 +1,10 @@
+import sys
 import unittest
 from typing import Type
 
-import pytest
-
 from gldb.query import Query, QueryResult, RemoteSparqlQuery
 from gldb.stores import DataStore
+from gldb.stores import RemoteSparqlStore
 from gldb.stores import StoreManager
 
 
@@ -72,9 +72,9 @@ class TestDataStore(unittest.TestCase):
         self.assertIsInstance(qres, QueryResult)
         self.assertEqual(qres.data, "mock_result")
 
-    @pytest.mark.network
     def test_wikidata_store(self):
-        from gldb.stores import RemoteSparqlStore
+        if not (sys.version_info.major == 3 and sys.version_info.minor == 11):
+            self.skipTest("Skipping test on non-3.11 Python to avoid rate limiting")
         store = RemoteSparqlStore("https://query.wikidata.org/sparql")
         self.assertIsInstance(store, RemoteSparqlStore)
         self.assertEqual(store.__repr__(), "RemoteSparqlStore()")
