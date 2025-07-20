@@ -5,7 +5,7 @@ from typing import Dict, Union, Any, Type
 import rdflib
 
 from gldb.query import Query
-from gldb.query.metadata_query import SparqlQuery
+from gldb.query.metadata_query import SparqlQuery, RemoteSparqlQuery
 
 
 class Store(ABC):
@@ -86,6 +86,27 @@ class RDFStore(MetadataStore):
     @property
     def query(self):
         return SparqlQuery(self.graph)
+
+
+class RemoteSparqlStore(MetadataStore):
+
+    def __init__(self, endpoint: str = None):
+        self.endpoint = endpoint
+
+    @property
+    def query(self) -> RemoteSparqlQuery:
+        """Return graph for the DbPedia metadata store."""
+        try:
+            from SPARQLWrapper import SPARQLWrapper, JSON
+        except ImportError:
+            raise ImportError("Please install SPARQLWrapper to use this class: pip install SPARQLWrapper")
+        sparql = SPARQLWrapper(self.endpoint)
+        sparql.setReturnFormat(JSON)
+        return RemoteSparqlQuery(sparql)
+
+    def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
+        """Uploads a file to the remote SPARQL endpoint."""
+        raise NotImplementedError("Remote SPARQL Store does not support file uploads.")
 
 
 class StoreManager:

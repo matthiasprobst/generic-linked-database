@@ -1,7 +1,7 @@
 import unittest
 from typing import Type
 
-from gldb.query import Query, QueryResult
+from gldb.query import Query, QueryResult, RemoteSparqlQuery
 from gldb.stores import DataStore
 from gldb.stores import StoreManager
 
@@ -69,3 +69,20 @@ class TestDataStore(unittest.TestCase):
         qres = query.execute()
         self.assertIsInstance(qres, QueryResult)
         self.assertEqual(qres.data, "mock_result")
+
+    def test_wikidata_store(self):
+        from gldb.stores import RemoteSparqlStore
+        store = RemoteSparqlStore("https://query.wikidata.org/sparql")
+        self.assertIsInstance(store, RemoteSparqlStore)
+        self.assertEqual(store.__repr__(), "RemoteSparqlStore()")
+        self.assertIsInstance(store.query, RemoteSparqlQuery)
+
+        sparql_query = """
+SELECT * WHERE {
+  wd:Q131549102 ?property ?value.
+  OPTIONAL { ?value rdfs:label ?valueLabel. }
+}
+ORDER BY ?propertyLabel
+"""
+        res = store.query(sparql_query)
+        self.assertTrue(len(res.data) >= 172)
