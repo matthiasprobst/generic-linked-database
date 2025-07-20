@@ -98,7 +98,7 @@ class StoreManager:
         """Allows access to stores as attributes."""
         if item in self.stores:
             return self.stores[item]
-        return super().__getattr__(item)
+        return super().__getattribute__(item)
 
     def __len__(self):
         """Returns the number of stores managed."""

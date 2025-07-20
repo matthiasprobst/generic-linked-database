@@ -5,15 +5,15 @@ from typing import Any, Dict
 
 
 class AbstractQuery(ABC):
-
-    def __init__(self, query: str,
-                 description: str = None,
-                 *args,
-                 **kwargs):
-        self.query = query
-        self.description = description
-        self._args = args
-        self._kwargs = kwargs
+    pass
+    # def __init__(self, query: str,
+    #              description: str = None,
+    #              *args,
+    #              **kwargs):
+    #     self.query = query
+    #     self.description = description
+    #     self._args = args
+    #     self._kwargs = kwargs
 
 
 class QueryResult:
@@ -25,6 +25,9 @@ class QueryResult:
 
     def __len__(self):
         return len(self.data)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(\n  query={self.query},\n  data={self.data},\n  description={self.description}\n)"
 
 
 @dataclass(frozen=True)

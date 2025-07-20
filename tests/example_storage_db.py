@@ -12,7 +12,7 @@ class CSVDbQuery(Query):
         super().__init__(query, description)
         self.query = query
 
-    def execute(self, *args, **kwargs):
+    def execute(self, query, description=None, *args, **kwargs):
         raise NotImplementedError("CSVDbQuery does not support execution.")
 
 

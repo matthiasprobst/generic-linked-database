@@ -9,7 +9,7 @@ from gldb.stores import StoreManager
 class MockSqlQuery(Query):
 
     def __init__(self, query: str, description: str = None):
-        super().__init__(query, description)
+        # super().__init__(query, description)
         self.query = query
 
     def execute(self, *args, **kwargs) -> QueryResult:

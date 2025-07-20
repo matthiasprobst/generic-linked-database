@@ -5,20 +5,20 @@ import rdflib
 from gldb.query import Query, QueryResult, SparqlQuery
 
 
-class TestVersion(unittest.TestCase):
+class TestQuery(unittest.TestCase):
 
     def test_query(self):
-
         class SQLQuery(Query):
 
-            def execute(self, *args, **kwargs) -> QueryResult:
-                return QueryResult(self, "result")
+            def execute(self, query, description=None, *args, **kwargs) -> QueryResult:
+                return QueryResult(self, data="result", description=description)
 
-        q = SQLQuery("SELECT * FROM Customers;", "Get all customers")
-        self.assertEqual(q.query, "SELECT * FROM Customers;")
-        self.assertEqual(q.description, "Get all customers")
+        q = SQLQuery()
+        res = q("SELECT * FROM Customers;", "Get all customers")
+        self.assertEqual(res.query, q)
+        self.assertEqual(res.description, "Get all customers")
 
-        res = q.execute()
+        res = q.execute("SELECT * FROM Customers;", "Get all customers")
         self.assertIsInstance(res, QueryResult)
 
     def test_sparql_query(self):
