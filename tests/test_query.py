@@ -1,5 +1,7 @@
+import sys
 import unittest
 
+import pytest
 import rdflib
 from SPARQLWrapper import SPARQLWrapper, JSON
 
@@ -36,7 +38,10 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(res.query, sparql_query)
         self.assertTrue(res.data.equals(sparql_result_to_df(graph.query("SELECT * WHERE { ?s ?p ?o }"))))
 
-    def test_dbpedia_query(self):
+    @pytest.mark.network
+    def test_wikidata_query(self):
+        if not (sys.version_info.major == 3 and sys.version_info.minor == 11):
+            pytest.skip("Skipping test on non-3.11 Python to avoid rate limiting")
         ENDPOINT_URL = "https://query.wikidata.org/sparql"
         sparql = SPARQLWrapper(ENDPOINT_URL)
         sparql.setReturnFormat(JSON)
@@ -58,14 +63,3 @@ ORDER BY ?propertyLabel
         self.assertIsInstance(res, QueryResult)
         self.assertEqual(res.query, sparql_query)
         self.assertTrue(len(res.data) >= 972)
-
-        res = sparql_query(
-            """
-SELECT * WHERE {
-  wd:Q131549102 ?property ?value.
-  OPTIONAL { ?value rdfs:label ?valueLabel. }
-}
-ORDER BY ?propertyLabel
-"""
-        )
-        print(res)
