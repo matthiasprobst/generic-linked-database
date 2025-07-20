@@ -16,28 +16,9 @@ for h in logger.handlers:
 __this_dir__ = pathlib.Path(__file__).parent
 
 sys.path.insert(0, str(__this_dir__))
-from example_rdf_database import InMemoryRDFDatabase
+from gldb.stores import InMemoryRDFStore
 from example_storage_db import CSVDatabase
 
-
-# class GenericLinkedDatabaseImpl(GenericLinkedDatabase):
-#
-#     def __init__(self):
-#         _store_manager = StoreManager()
-#         _store_manager.add_store("rdf_database", InMemoryRDFDatabase())
-#         _store_manager.add_store("csv_database", CSVDatabase())
-#         self._store_manager = _store_manager
-#
-#     @property
-#     def store_manager(self) -> StoreManager:
-#         return self._store_manager
-#
-#     # @property
-#     # def datastore(self) -> CSVDatabase:
-#     #     return self._storage_db
-#
-#     def linked_upload(self, filename: Union[str, pathlib.Path]):
-#         raise NotImplemented("linked_upload not implemented")
 
 def get_temperature_data_by_date(db, date: str) -> List[FederatedQueryResult]:
     """High-level abstraction for user to find temperature data.
@@ -100,8 +81,6 @@ def get_temperature_data_by_date(db, date: str) -> List[FederatedQueryResult]:
     return federated_query_results
 
 
-
-
 class TestGenericLinkedDatabase(unittest.TestCase):
 
     def test_rdf_and_csv_stores(self):
@@ -116,14 +95,14 @@ class TestGenericLinkedDatabase(unittest.TestCase):
         with self.assertRaises(ValueError):
             db = GenericLinkedDatabase(
                 stores={
-                    "rdf_database": InMemoryRDFDatabase()
+                    "rdf_database": InMemoryRDFStore(__this_dir__ / "data")
                 }
             )
             db.stores.add_store("rdf_database", CSVDatabase())
 
         db = GenericLinkedDatabase(
             stores={
-                "rdf_database": InMemoryRDFDatabase(),
+                "rdf_database": InMemoryRDFStore(__this_dir__ / "data"),
                 "csv_database": CSVDatabase()
             }
         )
@@ -132,14 +111,14 @@ class TestGenericLinkedDatabase(unittest.TestCase):
         csv_database: DataStore = db.stores.csv_database
 
         self.assertIsInstance(rdf_database, MetadataStore)
-        self.assertIsInstance(rdf_database, InMemoryRDFDatabase)
+        self.assertIsInstance(rdf_database, InMemoryRDFStore)
         self.assertIsInstance(csv_database, DataStore)
         self.assertIsInstance(csv_database, CSVDatabase)
 
         csv_database = db.data_stores.csv_database
         rdf_database = db.metadata_stores.rdf_database
         self.assertIsInstance(csv_database, CSVDatabase)
-        self.assertIsInstance(rdf_database, InMemoryRDFDatabase)
+        self.assertIsInstance(rdf_database, InMemoryRDFStore)
 
         rdf_database.upload_file(__this_dir__ / "data/data1.jsonld")
         res = rdf_database.query(query="SELECT * WHERE {?s ?p ?o}", description="Selects all triples")

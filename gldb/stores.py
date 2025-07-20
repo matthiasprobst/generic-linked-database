@@ -1,4 +1,5 @@
 import pathlib
+import shutil
 from abc import ABC, abstractmethod
 from typing import Dict, Union, Any, Type
 
@@ -41,7 +42,7 @@ class MetadataStore(Store, ABC):
         """Insert data into the data store."""
 
 
-class RDFStore(MetadataStore):
+class RDFStore(MetadataStore, ABC):
     namespaces = {
         "ex": "https://example.org/",
         "afn": "http://jena.apache.org/ARQ/function#",
@@ -150,3 +151,80 @@ class StoreManager:
         if store_name in self.stores:
             raise ValueError(f"DataStore with name {store_name} already exists.")
         self.stores[store_name] = store
+
+
+# concrete implementations of Store
+
+class InMemoryRDFStore(RDFStore):
+    """In-memory RDF database that can upload files and return a combined graph."""
+
+    _expected_file_extensions = {".ttl", ".rdf", ".jsonld"}
+
+    def __init__(self, data_dir: Union[str, pathlib.Path], recursive_exploration: bool = False):
+        self._data_dir = pathlib.Path(data_dir).resolve()
+        self._recursive_exploration = recursive_exploration
+        self._filenames = []
+        self._graphs = {}
+        self._combined_graph = rdflib.Graph()
+        self.update()
+
+    @property
+    def data_dir(self) -> pathlib.Path:
+        """Returns the data directory where files are stored."""
+        return self._data_dir
+
+    def update(self):
+        for _ext in self._expected_file_extensions:
+            if self._recursive_exploration:
+                self._filenames.extend([f.resolve().absolute() for f in self.data_dir.rglob(f"*{_ext}")])
+            else:
+                self._filenames.extend([f.resolve().absolute() for f in self.data_dir.glob(f"*{_ext}")])
+        self._filenames = list(set(self._filenames))  # remove duplicates
+        for filename in self._filenames:
+            self._add_to_graph(filename)
+
+    @property
+    def filenames(self):
+        """Returns the list of filenames uploaded to the store."""
+        return self._filenames
+
+    def upload_file(self, filename) -> bool:
+        filename = pathlib.Path(filename).resolve().absolute()
+        if not filename.exists():
+            raise FileNotFoundError(f"File {filename} not found.")
+        if filename.suffix not in self._expected_file_extensions:
+            raise ValueError(f"File type {filename.suffix} not supported.")
+        if filename in self._filenames:
+            self._filenames.remove(filename)
+        self._filenames.append(filename)
+        if filename.parent != self.data_dir:
+            shutil.copy(filename, self.data_dir / filename.name)
+        self._add_to_graph(filename)
+        return True
+
+    def _add_to_graph(self, filename: pathlib.Path):
+        """Adds the RDF graph from the file to the combined graph."""
+        g = self._graphs.get(filename, None)
+        if not g:
+            g = rdflib.Graph()
+            try:
+                g.parse(filename)
+            except Exception as e:
+                raise ValueError(f"Could not parse file '{filename}'. Error: {e}")
+            for s, p, o in g:
+                if isinstance(s, rdflib.BNode):
+                    new_s = rdflib.URIRef(f"https://example.org/{s}")
+                else:
+                    new_s = s
+                if isinstance(o, rdflib.BNode):
+                    new_o = rdflib.URIRef(f"https://example.org/{o}")
+                else:
+                    new_o = o
+                g.remove((s, p, o))
+                g.add((new_s, p, new_o))
+            self._graphs[filename] = g
+            self._combined_graph += g
+
+    @property
+    def graph(self) -> rdflib.Graph:
+        return self._combined_graph
