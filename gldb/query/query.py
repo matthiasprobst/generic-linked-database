@@ -18,9 +18,10 @@ class AbstractQuery(ABC):
 
 class QueryResult:
 
-    def __init__(self, query: AbstractQuery, data: Any):
+    def __init__(self, query: AbstractQuery, data: Any, description: str = None):
         self.query = query
         self.data = data
+        self.description = description
 
     def __len__(self):
         return len(self.data)
@@ -34,6 +35,9 @@ class FederatedQueryResult:
 
 class Query(AbstractQuery, ABC):
 
+    def __call__(self, query, description=None, *args, **kwargs):
+        return self.execute(query, description, *args, **kwargs)
+
     @abstractmethod
-    def execute(self, *args, **kwargs) -> QueryResult:
+    def execute(self, query, description=None, *args, **kwargs) -> QueryResult:
         """Executes the query."""

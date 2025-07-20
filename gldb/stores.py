@@ -13,12 +13,16 @@ class Store(ABC):
 
     @property
     @abstractmethod
-    def query(self)  -> Type[Query]:
+    def query(self) -> Type[Query]:
         """Returns the query class for the store."""
 
     @abstractmethod
     def upload_file(self, filename: Union[str, pathlib.Path]) -> Any:
         """Uploads a file to the store."""
+
+    def __repr__(self):
+        """String representation of the Store."""
+        return f"{self.__class__.__name__}()"
 
 
 class DataStore(Store, ABC):
@@ -27,12 +31,17 @@ class DataStore(Store, ABC):
     @abstractmethod
     def upload_file(self, filename: Union[str, pathlib.Path]):
         """Insert data into the data store."""
-        pass
 
 
 class MetadataStore(Store, ABC):
     """Metadata database interface using."""
 
+    @abstractmethod
+    def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
+        """Insert data into the data store."""
+
+
+class RDFStore(MetadataStore):
     namespaces = {
         "ex": "https://example.org/",
         "afn": "http://jena.apache.org/ARQ/function#",
@@ -72,27 +81,24 @@ class MetadataStore(Store, ABC):
     @property
     @abstractmethod
     def graph(self) -> rdflib.Graph:
-        pass
+        """Return graph for the metadata store."""
 
     @property
     def query(self):
-        return SparqlQuery
-
-    @abstractmethod
-    def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
-        """Insert data into the data store."""
-        pass
+        return SparqlQuery(self.graph)
 
 
 class StoreManager:
     """Store manager that manages the interaction between stores."""
 
-    def __init__(self):
-        self._stores: Dict[str, DataStore] = {}
+    def __init__(self, stores: Dict[str, Store] = None):
+        self._stores: Dict[str, DataStore] = stores if stores is not None else {}
 
-    def __getitem__(self, store_name: str) -> Store:
-        """Retrieve a store from the manager."""
-        return self.stores[store_name]
+    def __getattr__(self, item) -> Store:
+        """Allows access to stores as attributes."""
+        if item in self.stores:
+            return self.stores[item]
+        return super().__getattr__(item)
 
     def __len__(self):
         """Returns the number of stores managed."""
@@ -101,7 +107,7 @@ class StoreManager:
     def __repr__(self):
         """String representation of the DataStoreManager."""
         store_names = ", ".join(self.stores.keys())
-        return f"DataStoreManager(stores=[{store_names}])"
+        return f"{self.__class__.__name__}(stores=[{store_names}])"
 
     @property
     def stores(self) -> Dict[str, Store]:
@@ -120,22 +126,6 @@ class StoreManager:
 
     def add_store(self, store_name: str, store: Store):
         """Add a new store to the manager."""
+        if store_name in self.stores:
+            raise ValueError(f"DataStore with name {store_name} already exists.")
         self.stores[store_name] = store
-
-    def get_store(self, store_name: str) -> Store:
-        """Retrieve a store from the manager."""
-        return self.stores[store_name]
-
-    # def execute_query(self, store_name: str, query: Query) -> QueryResult:
-    #     """Executes a query on a specific store."""
-    #     store = self.get_store(store_name)
-    #     if store:
-    #         return store.execute_query(query)
-    #     raise ValueError(f"Store {store_name} not found.")
-
-    def upload_file(self, store_name: str, filename: str):
-        """Uploads a file to a specific store."""
-        store = self.get_store(store_name)
-        if store:
-            return store.upload_file(filename)
-        raise ValueError(f"Store {store_name} not found.")

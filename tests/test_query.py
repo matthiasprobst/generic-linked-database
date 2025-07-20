@@ -1,6 +1,8 @@
 import unittest
 
-from gldb.query import Query, QueryResult
+import rdflib
+
+from gldb.query import Query, QueryResult, SparqlQuery
 
 
 class TestVersion(unittest.TestCase):
@@ -18,3 +20,16 @@ class TestVersion(unittest.TestCase):
 
         res = q.execute()
         self.assertIsInstance(res, QueryResult)
+
+    def test_sparql_query(self):
+        graph = rdflib.Graph()
+        sparql_query = SparqlQuery(graph)
+        self.assertEqual(
+            sparql_query.__repr__(),
+            f"SparqlQuery(graph={graph})"
+        )
+
+        res = sparql_query("SELECT * WHERE { ?s ?p ?o }")
+        self.assertIsInstance(res, QueryResult)
+        self.assertEqual(res.query, sparql_query)
+        self.assertEqual(res.data, graph.query("SELECT * WHERE { ?s ?p ?o }"))

@@ -39,14 +39,25 @@ class TestDataStore(unittest.TestCase):
     def test_DataStoreManager(self):
         manager = StoreManager()
         self.assertEqual(len(manager), 0)
-        print(manager)
+        self.assertEqual(
+            manager.__repr__(),
+            "StoreManager(stores=[])"
+        )
 
     def test_add_store(self):
         manager = StoreManager()
         store = CSVDatabase()
+        self.assertEqual(
+            len(manager.stores),
+            0
+        )
+        self.assertEqual(store.__repr__(), "CSVDatabase()")
         manager.add_store("test_store", store)
 
         self.assertEqual(len(manager), 1)
+
+        with self.assertRaises(AttributeError):
+            manager.does_not_exist
 
     def test_query_store(self):
         store = CSVDatabase()

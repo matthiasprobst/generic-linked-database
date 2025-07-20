@@ -2,10 +2,10 @@ import pathlib
 
 import rdflib
 
-from gldb.stores import MetadataStore
+from gldb.stores import RDFStore
 
 
-class InMemoryRDFDatabase(MetadataStore):
+class InMemoryRDFDatabase(RDFStore):
 
     def __init__(self):
         self._filenames = []

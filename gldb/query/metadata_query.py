@@ -1,7 +1,5 @@
 from abc import ABC
 
-import rdflib
-
 from gldb.query.query import Query, QueryResult
 
 
@@ -11,14 +9,20 @@ class MetadataStoreQuery(Query, ABC):
 
 class SparqlQuery(MetadataStoreQuery):
 
+    def __init__(self, graph):
+        """
+        Initialize a SPARQL query.
+
+        :param graph: The RDF graph to query.
+        """
+        self.graph = graph
+
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.query!r})"
+        return f"{self.__class__.__name__}(graph={self.graph})"
 
-    def __str__(self):
-        return self.query
-
-    def execute(self, graph: rdflib.Graph) -> QueryResult:
+    def execute(self, query, description=None, *args, **kwargs):
         return QueryResult(
             query=self,
-            data=graph.query(self.query, *self._args, **self._kwargs)
+            data=self.graph.query(query, *args, **kwargs),
+            description=description
         )

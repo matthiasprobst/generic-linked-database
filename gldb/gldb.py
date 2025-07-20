@@ -1,8 +1,7 @@
 import logging
 from typing import Dict
 
-from .query import Query, QueryResult
-from .stores import Store, DataStore, StoreManager, MetadataStore
+from .stores import Store, StoreManager
 
 logger = logging.getLogger("gldb")
 
@@ -17,32 +16,30 @@ class GenericLinkedDatabase:
         for store_name, store in stores.items():
             if not isinstance(store, Store):
                 raise TypeError(f"Expected Store, got {type(store)}")
-            if store_name in self._store_manager.stores:
-                raise ValueError(f"DataStore with name {store_name} already exists.")
             logger.debug(f"Adding store {store_name} to the database.")
-            self._store_manager.add_store(store_name, store)
+            self.stores.add_store(store_name, store)
 
     @property
-    def store_manager(self) -> StoreManager:
+    def stores(self) -> StoreManager:
         """Returns the store manager."""
         return self._store_manager
 
     @property
-    def data_stores(self) -> Dict[str, DataStore]:
-        """Alias for stores property."""
-        return {k: v for k, v in self.store_manager.data_stores.items() if isinstance(v, DataStore)}
+    def metadata_stores(self) -> StoreManager:
+        return StoreManager(
+            self.stores.metadata_stores
+        )
 
     @property
-    def metadata_stores(self) -> Dict[str, MetadataStore]:
+    def data_stores(self) -> StoreManager:
         """Alias for stores property."""
-        return {k: v for k, v in self.store_manager.metadata_stores.items() if isinstance(v, DataStore)}
-
-    def __getitem__(self, store_name) -> Store:
-        return self.store_manager[store_name]
+        return StoreManager(
+            self.stores.data_stores
+        )
 
     # @abstractmethod
     # def linked_upload(self, filename: Union[str, pathlib.Path]):
     #     """Uploads the file to both stores and links them."""
 
-    def execute_query(self, store_name: str, query: Query) -> QueryResult:
-        return self.store_manager.execute_query(store_name, query)
+    # def execute_query(self, store_name: str, query: Query) -> QueryResult:
+    #     return self.store_manager.execute_query(store_name, query)
