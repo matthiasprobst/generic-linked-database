@@ -74,9 +74,8 @@ class TestDataStore(unittest.TestCase):
     def test_wikidata_store(self):
         if not (sys.version_info.major == 3 and sys.version_info.minor == 11):
             self.skipTest("Skipping test on non-3.11 Python to avoid rate limiting")
-        store = RemoteSparqlStore("https://query.wikidata.org/sparql")
-        self.assertIsInstance(store, RemoteSparqlStore)
-        self.assertEqual(store.__repr__(), "RemoteSparqlStore()")
+        remote_store = RemoteSparqlStore("https://query.wikidata.org/sparql", return_format="json")
+        self.assertIsInstance(remote_store, RemoteSparqlStore)
 
         sparql_query = """
 SELECT * WHERE {
@@ -86,5 +85,5 @@ SELECT * WHERE {
 ORDER BY ?propertyLabel
 """
         query = RemoteSparqlQuery(sparql_query)
-        res = query.execute(store)
-        self.assertTrue(len(res.data) >= 172)
+        res = query.execute(remote_store)
+        self.assertTrue(len(res.data["results"]["bindings"]) >= 172)
