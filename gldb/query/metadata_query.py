@@ -4,6 +4,7 @@ import pandas as pd
 import rdflib
 
 from gldb.query.query import Query, QueryResult
+from gldb.stores import RDFStore, RemoteSparqlStore
 
 
 def parse_literal(literal):
@@ -23,53 +24,26 @@ class MetadataStoreQuery(Query, ABC):
 
 
 class SparqlQuery(MetadataStoreQuery):
+    """A SPARQL query interface for RDF stores."""
 
-    def __init__(self, graph):
-        """
-        Initialize a SPARQL query.
-
-        :param graph: The RDF graph to query.
-        """
-        self.graph = graph
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(graph={self.graph})"
-
-    def execute(self, query, description=None, *args, **kwargs):
+    def execute(self, store: RDFStore, *args, **kwargs):
         return QueryResult(
             query=self,
-            data=sparql_result_to_df(self.graph.query(query, *args, **kwargs).bindings),
-            description=description
+            data=sparql_result_to_df(store.graph.query(self.query, *args, **kwargs).bindings),
+            description=self.description
         )
 
 
 class RemoteSparqlQuery(MetadataStoreQuery):
 
-    def __init__(self, wrapper):
-        """
-        Initialize a remote SPARQL query.
+    def execute(self, store: RemoteSparqlStore, *args, **kwargs) -> QueryResult:
+        sparql = store.wrapper
+        sparql.setQuery(self.query)
 
-        :param wrapper: An instance of SPARQLWrapper configured for the remote SPARQL endpoint.
-        """
-        self.wrapper = wrapper
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(endpoint={self.wrapper.endpoint})"
-
-    def execute(self, query, description=None, *args, **kwargs) -> QueryResult:
-        try:
-            from SPARQLWrapper import SPARQLWrapper, JSON
-        except ImportError:
-            raise ImportError("Please install SPARQLWrapper to use this class: pip install SPARQLWrapper")
-        sparql = self.wrapper
-        sparql.setQuery(query)
-
-        results = sparql.query().convert()
-
-        bindings = results["results"]["bindings"]
+        results = sparql.queryAndConvert()
 
         return QueryResult(
             query=self,
-            data=bindings,
-            description=description
+            data=results,
+            description=self.description
         )

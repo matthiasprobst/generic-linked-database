@@ -1,21 +1,18 @@
 import pathlib
 import shutil
 from abc import ABC, abstractmethod
-from typing import Dict, Union, Any, Type
+from typing import Dict, Union, Any
 
 import rdflib
-
-from gldb.query import Query
-from gldb.query.metadata_query import SparqlQuery, RemoteSparqlQuery
 
 
 class Store(ABC):
     """Store interface."""
 
-    @property
-    @abstractmethod
-    def query(self) -> Type[Query]:
-        """Returns the query class for the store."""
+    # @property
+    # @abstractmethod
+    # def query(self) -> Type[Query]:
+    #     """Returns the query class for the store."""
 
     @abstractmethod
     def upload_file(self, filename: Union[str, pathlib.Path]) -> Any:
@@ -84,26 +81,37 @@ class RDFStore(MetadataStore, ABC):
     def graph(self) -> rdflib.Graph:
         """Return graph for the metadata store."""
 
-    @property
-    def query(self):
-        return SparqlQuery(self.graph)
+    # @property
+    # def query(self):
+    #     return SparqlQuery(self.graph)
 
 
 class RemoteSparqlStore(MetadataStore):
 
-    def __init__(self, endpoint: str = None):
-        self.endpoint = endpoint
-
-    @property
-    def query(self) -> RemoteSparqlQuery:
-        """Return graph for the DbPedia metadata store."""
+    def __init__(self, endpoint_url, return_format: str = None):
         try:
-            from SPARQLWrapper import SPARQLWrapper, JSON
+            from SPARQLWrapper import SPARQLWrapper
         except ImportError:
             raise ImportError("Please install SPARQLWrapper to use this class: pip install SPARQLWrapper")
-        sparql = SPARQLWrapper(self.endpoint)
-        sparql.setReturnFormat(JSON)
-        return RemoteSparqlQuery(sparql)
+
+        self._wrapper = SPARQLWrapper(endpoint_url)
+        if return_format is not None:
+            self._wrapper.setReturnFormat(return_format)
+
+    @property
+    def wrapper(self):
+        return self._wrapper
+
+    # @property
+    # def query(self) -> RemoteSparqlQuery:
+    #     """Return graph for the DbPedia metadata store."""
+    #     try:
+    #         from SPARQLWrapper import SPARQLWrapper, JSON
+    #     except ImportError:
+    #         raise ImportError("Please install SPARQLWrapper to use this class: pip install SPARQLWrapper")
+    #     sparql = SPARQLWrapper(self.endpoint)
+    #     sparql.setReturnFormat(JSON)
+    #     return RemoteSparqlQuery(sparql)
 
     def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
         """Uploads a file to the remote SPARQL endpoint."""

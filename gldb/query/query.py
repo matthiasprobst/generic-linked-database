@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-
 from dataclasses import dataclass
 from typing import Any, Dict
+
+from ..stores import Store
 
 
 class AbstractQuery(ABC):
@@ -30,9 +31,19 @@ class FederatedQueryResult:
 
 class Query(AbstractQuery, ABC):
 
-    def __call__(self, query, description=None, *args, **kwargs):
-        return self.execute(query, description, *args, **kwargs)
+    def __init__(self, query, description=None):
+        self.query = query
+        self.description = description
+
+    def __eq__(self, other):
+        if not isinstance(other, Query):
+            return NotImplemented
+        return self.query == other.query and self.description == other.description
+
+    def __repr__(self):
+        description_repr = self.description or ""
+        return f"{self.__class__.__name__}(query=\"{self.query}\", description=\"{description_repr}\")"
 
     @abstractmethod
-    def execute(self, query, description=None, *args, **kwargs) -> QueryResult:
+    def execute(self, store: Store) -> QueryResult:
         """Executes the query."""

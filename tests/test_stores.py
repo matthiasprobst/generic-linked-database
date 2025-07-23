@@ -1,6 +1,5 @@
 import sys
 import unittest
-from typing import Type
 
 from gldb.query import Query, QueryResult, RemoteSparqlQuery
 from gldb.stores import DataStore
@@ -25,9 +24,9 @@ class CSVDatabase(DataStore):
         self.tables = {}
         self._expected_file_extensions = {".csv", }
 
-    @property
-    def query(self) -> Type[Query]:
-        return MockSqlQuery
+    # @property
+    # def query(self) -> Type[Query]:
+    #     return MockSqlQuery
 
     def upload_file(self, filename) -> bool:
         return True
@@ -63,12 +62,12 @@ class TestDataStore(unittest.TestCase):
 
     def test_query_store(self):
         store = CSVDatabase()
-        query = store.query(query="SELECT * FROM test_table;")
+        query = MockSqlQuery(query="SELECT * FROM test_table;")
         self.assertIsInstance(query, Query)
         self.assertIsInstance(query, MockSqlQuery)
         self.assertEqual(query.query, "SELECT * FROM test_table;")
 
-        qres = query.execute()
+        qres = query.execute(store)
         self.assertIsInstance(qres, QueryResult)
         self.assertEqual(qres.data, "mock_result")
 
@@ -78,7 +77,6 @@ class TestDataStore(unittest.TestCase):
         store = RemoteSparqlStore("https://query.wikidata.org/sparql")
         self.assertIsInstance(store, RemoteSparqlStore)
         self.assertEqual(store.__repr__(), "RemoteSparqlStore()")
-        self.assertIsInstance(store.query, RemoteSparqlQuery)
 
         sparql_query = """
 SELECT * WHERE {
@@ -87,5 +85,6 @@ SELECT * WHERE {
 }
 ORDER BY ?propertyLabel
 """
-        res = store.query(sparql_query)
+        query = RemoteSparqlQuery(sparql_query)
+        res = query.execute(store)
         self.assertTrue(len(res.data) >= 172)

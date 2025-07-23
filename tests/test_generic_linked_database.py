@@ -5,7 +5,7 @@ import unittest
 from typing import List
 
 from gldb import GenericLinkedDatabase, DataStore, MetadataStore
-from gldb.query import QueryResult, FederatedQueryResult
+from gldb.query import QueryResult, FederatedQueryResult, SparqlQuery
 from gldb.stores import RDFStore
 
 logger = logging.getLogger("gldb")
@@ -37,7 +37,7 @@ def get_temperature_data_by_date(db, date: str) -> List[FederatedQueryResult]:
     """.format(date=date)
     # results = self["rdf_database"].execute_query(SparqlQuery(sparql_query))
     _store: RDFStore = db.stores.rdf_database
-    results = _store.query(sparql_query)
+    results = SparqlQuery(sparql_query).execute(_store)
 
     # result_data = [{str(k): parse_literal(v) for k, v in binding.items()} for binding in results.data.bindings]
 
@@ -59,7 +59,7 @@ def get_temperature_data_by_date(db, date: str) -> List[FederatedQueryResult]:
           <{dataset}> ?p ?o .
         }}
         """.format(dataset=dataset)
-        metadata = rdf_database.query(metadata_sparql)  # .execute(rdf_database.graph)
+        metadata = SparqlQuery(metadata_sparql).execute(rdf_database)  # .execute(rdf_database.graph)
         # dataset_result_data = [{str(k): v for k, v in binding.items()} for binding in
         #                        metadata_result.data.bindings]
         # metadata = {d["p"]: d["o"] for d in dataset_result_data}
@@ -121,7 +121,10 @@ class TestGenericLinkedDatabase(unittest.TestCase):
         self.assertIsInstance(rdf_database, InMemoryRDFStore)
 
         rdf_database.upload_file(__this_dir__ / "data/data1.jsonld")
-        res = rdf_database.query(query="SELECT * WHERE {?s ?p ?o}", description="Selects all triples")
+
+        from gldb.query import SparqlQuery
+        query = SparqlQuery(query="SELECT * WHERE {?s ?p ?o}", description="Selects all triples")
+        res = query.execute(rdf_database)
         self.assertEqual(res.description, "Selects all triples")
 
         self.assertIsInstance(res, QueryResult)
