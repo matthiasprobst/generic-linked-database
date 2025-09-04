@@ -4,7 +4,7 @@
     "dcterms": "http://purl.org/dc/terms/",
     "foaf": "http://xmlns.com/foaf/0.1/"
   },
-  "@id": "file:temperature_data.csv",
+  "@id": "file:temperature.csv",
   "@type": "dcat:Dataset",
   "dcterms:title": "Temperature Data Over Time",
   "dcterms:creator": {
