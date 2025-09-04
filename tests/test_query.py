@@ -59,8 +59,8 @@ ORDER BY ?propertyLabel
         )
         remote_store = RemoteSparqlStore(endpoint_url=enpoint_url, return_format="json")
 
-        if not (sys.version_info.major == 3 and sys.version_info.minor == 11):
-            self.skipTest("Skipping test on non-3.11 Python to avoid rate limiting")
+        if not (sys.version_info.major == 3 and sys.version_info.minor == 12):
+            self.skipTest("Skipping test on non-3.12 Python to avoid rate limiting")
 
             res = sparql_query.execute(remote_store)
             self.assertIsInstance(res, QueryResult)

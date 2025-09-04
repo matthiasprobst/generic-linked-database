@@ -72,8 +72,8 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(qres.data, "mock_result")
 
     def test_wikidata_store(self):
-        if not (sys.version_info.major == 3 and sys.version_info.minor == 11):
-            self.skipTest("Skipping test on non-3.11 Python to avoid rate limiting")
+        if not (sys.version_info.major == 3 and sys.version_info.minor == 12):
+            self.skipTest("Skipping test on non-3.12 Python to avoid rate limiting")
         remote_store = RemoteSparqlStore("https://query.wikidata.org/sparql", return_format="json")
         self.assertIsInstance(remote_store, RemoteSparqlStore)
 
