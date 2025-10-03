@@ -122,7 +122,6 @@ class TestGenericLinkedDatabase(unittest.TestCase):
 
         rdf_database.upload_file(__this_dir__ / "data/data1.jsonld")
 
-        from gldb.query import SparqlQuery
         query = SparqlQuery(query="SELECT * WHERE {?s ?p ?o}", description="Selects all triples")
         res = query.execute(rdf_database)
         self.assertEqual(res.description, "Selects all triples")

@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## v2.0.0
+## v2.0.0-rc.2
+- 
+
+## v2.0.0-rc.1
 
 - major refactoring of database organisation and naming:
   - `GenericLinkedDatabase` is not abstract anymore, but a concrete class
