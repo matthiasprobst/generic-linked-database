@@ -173,6 +173,7 @@ class InMemoryRDFStore(RDFStore):
 
     def __init__(self, data_dir: Union[str, pathlib.Path], recursive_exploration: bool = False):
         self._data_dir = pathlib.Path(data_dir).resolve()
+        self._data_dir.mkdir(parents=True, exist_ok=True)
         self._recursive_exploration = recursive_exploration
         self._filenames = []
         self._graphs = {}
@@ -260,9 +261,9 @@ class GraphDB(RemoteSparqlStore):
 
         repo_info = self.get_repository_info(self.repository)
         if not repo_info:
-            print(f"\n [!] The repository '{self.repository}' does not exist\n"
-                  " [!] Call create_repository('config.ttl') with a valid configuration "
-                  "('config.ttl') file to create it.")
+            logger.info(f"The repository '{self.repository}' does not exist. "
+                        "Call create_repository('config.ttl') with a valid configuration "
+                        "('config.ttl') file to create it.")
 
     @property
     def endpoint(self) -> str:

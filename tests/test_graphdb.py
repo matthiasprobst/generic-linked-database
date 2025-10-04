@@ -14,8 +14,9 @@ def make_graphdb():
                    password="pass")
 
 
+@patch.object(GraphDB, "get_repository_info", return_value={})
 @patch("requests.post")
-def test_upload_file_success(mock_post, tmp_path):
+def test_upload_file_success(mock_post, mock_repo_info, tmp_path):
     # Erfolgreicher Upload
     test_file = tmp_path / "test.ttl"
     test_file.write_text("@prefix ex: <http://example.org/> . ex:a ex:b ex:c .")
@@ -25,16 +26,18 @@ def test_upload_file_success(mock_post, tmp_path):
     mock_post.assert_called_once()
 
 
+@patch.object(GraphDB, "get_repository_info", return_value={})
 @patch("requests.post")
-def test_upload_file_not_found(mock_post):
+def test_upload_file_not_found(mock_post, mock_repo_info):
     db = make_graphdb()
     with pytest.raises(FileNotFoundError):
         db.upload_file("notfound.ttl")
     mock_post.assert_not_called()
 
 
+@patch.object(GraphDB, "get_repository_info", return_value={})
 @patch("requests.post")
-def test_upload_file_wrong_format(mock_post, tmp_path):
+def test_upload_file_wrong_format(mock_post, mock_repo_info, tmp_path):
     test_file = tmp_path / "test.txt"
     test_file.write_text("dummy")
     db = make_graphdb()
@@ -43,8 +46,9 @@ def test_upload_file_wrong_format(mock_post, tmp_path):
     mock_post.assert_not_called()
 
 
+@patch.object(GraphDB, "get_repository_info", return_value={})
 @patch("requests.post")
-def test_upload_file_server_error(mock_post, tmp_path):
+def test_upload_file_server_error(mock_post, mock_repo_info, tmp_path):
     test_file = tmp_path / "test.ttl"
     test_file.write_text("@prefix ex: <http://example.org/> . ex:a ex:b ex:c .")
     mock_post.return_value = Mock(status_code=500, text="Internal Server Error")
@@ -54,8 +58,8 @@ def test_upload_file_server_error(mock_post, tmp_path):
     mock_post.assert_called_once()
 
 
-@patch("gldb.stores.GraphDB.wrapper")
-def test_select_all(mock_sparql):
+@patch.object(GraphDB, "get_repository_info", return_value={})
+def test_select_all(mock_repo_info):
     # SELECT_ALL als RemoteSparqlQuery
     SELECT_ALL = RemoteSparqlQuery(
         "SELECT * WHERE { ?s ?p ?o }",
@@ -74,7 +78,7 @@ def test_select_all(mock_sparql):
             ]
         },
     }
-    db.wrapper = fake
+    db._wrapper = fake
 
     result = SELECT_ALL.execute(db)
 

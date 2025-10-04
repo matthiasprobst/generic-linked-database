@@ -1,16 +1,18 @@
 # CHANGELOG
 
 ## v2.0.0-rc.2
-- 
+
+- add GraphDB as store option
+- bugfixes
 
 ## v2.0.0-rc.1
 
 - major refactoring of database organisation and naming:
-  - `GenericLinkedDatabase` is not abstract anymore, but a concrete class
-  - Stores (of type `Store`) must be provided with a name when instantiating a `GenericLinkedDatabase`
-  - Files are organized slightly different, so you may need to adjust your imports
-  - a store must provide the query class via abstract property `query`
-  - add a remote sparql query and store
+    - `GenericLinkedDatabase` is not abstract anymore, but a concrete class
+    - Stores (of type `Store`) must be provided with a name when instantiating a `GenericLinkedDatabase`
+    - Files are organized slightly different, so you may need to adjust your imports
+    - a store must provide the query class via abstract property `query`
+    - add a remote sparql query and store
 
 ## v1.2.1
 
