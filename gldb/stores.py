@@ -4,6 +4,9 @@ from abc import ABC, abstractmethod
 from typing import Dict, Union, Any
 
 import rdflib
+import requests
+
+from gldb import logger
 
 
 class Store(ABC):
@@ -92,7 +95,7 @@ class RemoteSparqlStore(MetadataStore):
         try:
             from SPARQLWrapper import SPARQLWrapper
         except ImportError:
-            raise ImportError("Please install SPARQLWrapper to use this class: pip install SPARQLWrapper")
+            raise ImportError("Please install SPARQLWrapper to use this class: 'pip install SPARQLWrapper'")
 
         self._wrapper = SPARQLWrapper(endpoint_url)
         if return_format is not None:
@@ -236,3 +239,168 @@ class InMemoryRDFStore(RDFStore):
     @property
     def graph(self) -> rdflib.Graph:
         return self._combined_graph
+
+
+class GraphDB(RemoteSparqlStore):
+    """GraphDB RDF database store."""
+
+    def __init__(self, endpoint: str, repository: str, username: str = None, password: str = None):
+        super().__init__(f"{endpoint}/repositories/{repository}")
+        try:
+            from SPARQLWrapper import SPARQLWrapper, JSON
+        except ImportError:
+            raise ImportError("Please install SPARQLWrapper to use this class: pip install SPARQLWrapper")
+        self._endpoint = endpoint
+        self._repository = repository
+        self._username = username
+        self._password = password
+        self._wrapper.setReturnFormat(JSON)
+        if self.username and self.password:
+            self._wrapper.setCredentials(self.username, self.password)
+
+        repo_info = self.get_repository_info(self.repository)
+        if not repo_info:
+            print(f"\n [!] The repository '{self.repository}' does not exist\n"
+                  " [!] Call create_repository('config.ttl') with a valid configuration "
+                  "('config.ttl') file to create it.")
+
+    @property
+    def endpoint(self) -> str:
+        return self._endpoint
+
+    @property
+    def repository(self) -> str:
+        return self._repository
+
+    @property
+    def username(self) -> str:
+        return self._username
+
+    @property
+    def password(self) -> str:
+        return self._password
+
+    def upload_file(self, filename: Union[str, pathlib.Path]) -> bool:
+        """Uploads an RDF file to das GraphDB-Repository."""
+        filename = pathlib.Path(filename).resolve().absolute()
+        if not filename.exists():
+            raise FileNotFoundError(f"File {filename} not found.")
+        # Determine content type based on file extension
+        ext = filename.suffix.lower()
+        if ext == ".ttl":
+            content_type = "text/turtle"
+        elif ext == ".rdf":
+            content_type = "application/rdf+xml"
+        elif ext == ".jsonld":
+            content_type = "application/ld+json"
+        else:
+            raise ValueError(f"File form '{ext}' not supported.")
+        # Target URL
+        url = f"{self.endpoint}/repositories/{self.repository}/statements"
+        with open(filename, "rb") as f:
+            data = f.read()
+        headers = {"Content-Type": content_type}
+        auth = (self.username, self.password) if self.username and self.password else None
+        response = requests.post(url, data=data, headers=headers, auth=auth)
+        if response.status_code in (200, 201, 204):
+            return True
+        else:
+            raise RuntimeError(f"Upload failed: {response.status_code} {response.text}")
+
+    def create_repository(self, config_path: Union[str, pathlib.Path]) -> bool:
+        """Creates a GraphDB repository using a configuration file (repo-config.ttl)."""
+        config_path = pathlib.Path(config_path).resolve().absolute()
+        if not config_path.exists():
+            raise FileNotFoundError(f"Config file not found: {config_path}.")
+        url = f"{self.endpoint}/rest/repositories"
+        auth = (self.username, self.password) if self.username and self.password else None
+        with open(config_path, "rb") as f:
+            files = {"config": (config_path.name, f, "application/x-turtle")}
+            response = requests.post(url, files=files, auth=auth)
+        if response.status_code in (201, 204):
+            return True
+        else:
+            raise RuntimeError(f"Repository konnte nicht angelegt werden: {response.status_code} {response.text}")
+
+    def list_repositories(self) -> Any:
+        """Lists all repositories in the GraphDB instance."""
+        url = f"{self.endpoint}/rest/repositories"
+        headers = {"Accept": "application/json"}
+        auth = (self.username, self.password) if self.username and self.password else None
+        response = requests.get(url, headers=headers, auth=auth)
+        if response.status_code == 200:
+            return response.json()
+        return None
+
+    def get_repository_info(self, repository) -> Dict:
+        """Returns information about a specific repository."""
+        repo = repository or self.repository
+        url = f"{self.endpoint}/rest/repositories/{repo}"
+        headers = {"Accept": "application/json"}
+        auth = (self.username, self.password) if self.username and self.password else None
+        response = requests.get(url, headers=headers, auth=auth)
+
+        if response.status_code == 200:
+            return response.json()
+        if response.status_code == 404:
+            logger.debug(f"Repository '{repo}' does not exist.")
+            return {}
+        if response.status_code == 401:
+            raise RuntimeError(f"Unauthorized access to repository '{repo}'. Check your credentials.")
+        if response.status_code == 403:
+            raise RuntimeError(f"Forbidden access to repository '{repo}'. Check your permissions.")
+        raise RuntimeError(f"Error fetching repository info: {response.status_code} {response.text}")
+
+    def get_or_create_repository(self, config_path: Union[str, pathlib.Path]) -> bool:
+        """Gets the repository info if it exists, otherwise creates it using the provided config file."""
+        if self.get_repository_info(self.repository):
+            logger.debug(f"Found existing repository '{self.repository}'.")
+            return True
+        logger.debug(f"Repository '{self.repository}' does not exist. Creating it.")
+        return self.create_repository(config_path)
+
+    def count_triples(self, key: str = "total", repository: str = None) -> int:
+        """Counts the number of triples in a repository.
+
+        Parameters
+        ----------
+        key : str, optional
+            The key to extract the count from the response. Default is "total". Other options are
+            "explicit", "inferred".
+        repository : str, optional
+            The name of the repository to count triples in. If None, uses the default repository.
+        """
+        repo = repository or self.repository
+        url = f"{self.endpoint}/rest/repositories/{repo}/size"
+        auth = (self.username, self.password) if self.username and self.password else None
+        response = requests.get(url, auth=auth)
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                return int(data.get(key, 0))
+            except Exception:
+                raise RuntimeError(f"Error parsing the triple number: {response.text}")
+        else:
+            raise RuntimeError(f"Error fetching the triple number: {response.status_code} {response.text}")
+
+    def restart_repository(self, repository: str = None) -> bool:
+        """Restarts a repository in the GraphDB instance."""
+        repo = repository or self.repository
+        url = f"{self.endpoint}/rest/repositories/{repo}/restart"
+        auth = (self.username, self.password) if self.username and self.password else None
+        response = requests.post(url, auth=auth)
+        if response.status_code in (200, 204):
+            return True
+        else:
+            raise RuntimeError(f"Error restarting the repository: {response.status_code} {response.text}")
+
+    def delete_repository(self, repository: str = None) -> bool:
+        """Deletes a repository from the GraphDB instance."""
+        repo = repository or self.repository
+        url = f"{self.endpoint}/rest/repositories/{repo}"
+        auth = (self.username, self.password) if self.username and self.password else None
+        response = requests.delete(url, auth=auth)
+        if response.status_code in (200, 204):
+            return True
+        else:
+            raise RuntimeError(f"Error deleting the repository: {response.status_code} {response.text}")
