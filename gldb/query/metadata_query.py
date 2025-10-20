@@ -3,8 +3,10 @@ from abc import ABC
 import pandas as pd
 import rdflib
 
+from gldb import logger
 from gldb.query.query import Query, QueryResult
 from gldb.stores import RDFStore, RemoteSparqlStore
+from .utils import sparql_json_to_dataframe
 
 
 def parse_literal(literal):
@@ -42,8 +44,13 @@ class RemoteSparqlQuery(MetadataStoreQuery):
 
         results = sparql.queryAndConvert()
 
+        try:
+            data = sparql_json_to_dataframe(results)
+        except Exception as e:
+            logger.debug("Failed to convert SPARQL results to DataFrame: %s", e)
+            data = results
         return QueryResult(
             query=self,
-            data=results,
+            data=data,
             description=self.description
         )

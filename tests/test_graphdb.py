@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 from unittest.mock import patch, Mock
 
+import pandas as pd
 import pytest
 
 from gldb.query.metadata_query import RemoteSparqlQuery
@@ -81,13 +82,19 @@ def test_select_all(mock_repo_info):
     db._wrapper = fake
 
     result = SELECT_ALL.execute(db)
-
-    assert result.data["results"]["bindings"] == [
-        {"s": {"value": "s1"}, "p": {"value": "p1"}, "o": {"value": "o1"}},
-        {"s": {"value": "s2"}, "p": {"value": "p2"}, "o": {"value": "o2"}},
-    ]
+    pd.testing.assert_frame_equal(
+        result.data,
+        pd.DataFrame(
+            {
+                "s": ["s1", "s2"],
+                "p": ["p1", "p2"],
+                "o": ["o1", "o2"],
+            }
+        )
+    )
+    # assert result.data["results"]["bindings"] == [
+    #     {"s": {"value": "s1"}, "p": {"value": "p1"}, "o": {"value": "o1"}},
+    #     {"s": {"value": "s2"}, "p": {"value": "p2"}, "o": {"value": "o2"}},
+    # ]
     fake.setQuery.assert_called_once_with("SELECT * WHERE { ?s ?p ?o }")
     fake.queryAndConvert.assert_called_once()
-
-    # check if the result is equal to the mock return value
-    assert result.data == fake.queryAndConvert.return_value
