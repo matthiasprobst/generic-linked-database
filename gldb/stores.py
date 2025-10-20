@@ -333,7 +333,7 @@ class GraphDB(RemoteSparqlStore):
             return response.json()
         return None
 
-    def get_repository_info(self, repository) -> Dict:
+    def get_repository_info(self, repository=None) -> Dict:
         """Returns information about a specific repository."""
         repo = repository or self.repository
         url = f"{self.endpoint}/rest/repositories/{repo}"
