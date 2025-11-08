@@ -1,6 +1,19 @@
 import json
+from datetime import datetime, date, time
+from decimal import Decimal
 
+import pandas as pd
 from rdflib import Graph
+
+# --- minimal caster for common XSD datatypes ---
+_XSD = "http://www.w3.org/2001/XMLSchema#"
+_NUM_DT = {
+    _XSD + "integer", _XSD + "int", _XSD + "long", _XSD + "short",
+    _XSD + "byte", _XSD + "nonNegativeInteger", _XSD + "nonPositiveInteger",
+    _XSD + "positiveInteger", _XSD + "negativeInteger"
+}
+_FLOAT_DT = {_XSD + "float", _XSD + "double"}
+_DEC_DT = {_XSD + "decimal"}
 
 
 def sparql_query_to_jsonld(graph: Graph, query: str) -> dict:
@@ -32,6 +45,68 @@ def sparql_query_to_jsonld(graph: Graph, query: str) -> dict:
             jsonld["@graph"].append(item)
 
     return jsonld
+
+
+def _cast_cell(cell, cast_literals: bool):
+    """cell is a SPARQL JSON binding object like {'type': 'literal', 'value': '42', 'datatype': '...'}"""
+    if cell is None:
+        return None
+    t = cell.get("type")
+    v = cell.get("value")
+    if not cast_literals:
+        return v
+    if t == "literal":
+        dt = cell.get("datatype")
+        if dt in _NUM_DT:
+            try:
+                return int(v)
+            except Exception:
+                return v
+        if dt in _FLOAT_DT:
+            try:
+                return float(v)
+            except Exception:
+                return v
+        if dt in _DEC_DT:
+            try:
+                return Decimal(v)
+            except Exception:
+                return v
+        if dt == _XSD + "boolean":
+            return v.lower() == "true"
+        if dt == _XSD + "dateTime":
+            try:
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except Exception:
+                return v
+        if dt == _XSD + "date":
+            try:
+                return date.fromisoformat(v)
+            except Exception:
+                return v
+        if dt == _XSD + "time":
+            try:
+                return time.fromisoformat(v)
+            except Exception:
+                return v
+        # language-tagged literal like {"xml:lang": "en"}
+        # fall through to string value
+        return v
+    # URIs / bnodes: just return string
+    return v
+
+
+def sparql_json_to_dataframe(results_json: dict, cast_literals: bool = True) -> pd.DataFrame:
+    """
+    Turn a SPARQL SELECT JSON result into a pandas DataFrame.
+    Columns are exactly results['head']['vars'] and missing bindings become None.
+    """
+    vars_ = results_json.get("head", {}).get("vars", [])
+    rows = []
+    for b in results_json.get("results", {}).get("bindings", []):
+        row = {var: _cast_cell(b.get(var), cast_literals) for var in vars_}
+        rows.append(row)
+    return pd.DataFrame(rows, columns=vars_)
 
 
 if __name__ == "__main__":

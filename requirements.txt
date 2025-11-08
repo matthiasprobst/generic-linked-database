@@ -1,6 +1,6 @@
 appdirs~=1.4
 rdflib~=7.1
-setuptools>=78.1.1
-requests
-appdirs
-rdflib
+setuptools>78.1.1
+requests~= 2.32
+appdirs~=1.4
+rdflib~= 7.1

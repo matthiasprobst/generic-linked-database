@@ -86,4 +86,4 @@ ORDER BY ?propertyLabel
 """
         query = RemoteSparqlQuery(sparql_query)
         res = query.execute(remote_store)
-        self.assertTrue(len(res.data["results"]["bindings"]) >= 172)
+        self.assertTrue(len(res.data) >= 172)
