@@ -4,15 +4,15 @@
     "license": "https://spdx.org/licenses/MIT",
     "codeRepository": "git+https://github.com/matthiasprobst/generic-linked-database",
     "name": "gldb",
-  "version": "2.0.0-rc.2",
+  "version": "2.0.0",
     "description": "Generic linked database approach to manage RDF and raw data together.",
     "programmingLanguage": [
         "Python 3",
-        "Python 3.8",
         "Python 3.9",
         "Python 3.10",
         "Python 3.11",
-        "Python 3.12"
+      "Python 3.12",
+      "Python 3.13"
     ],
     "operatingSystem": [
         "Linux",
