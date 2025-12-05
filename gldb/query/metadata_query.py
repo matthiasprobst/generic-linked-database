@@ -29,6 +29,8 @@ class SparqlQuery(MetadataStoreQuery):
     """A SPARQL query interface for RDF stores."""
 
     def execute(self, store: RDFStore, *args, **kwargs):
+        if isinstance(store, RemoteSparqlStore):
+            return RemoteSparqlQuery(self.query, self.description).execute(store)
         return QueryResult(
             query=self,
             data=sparql_result_to_df(store.graph.query(self.query, *args, **kwargs).bindings),

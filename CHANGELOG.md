@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v2.0.1
+
+- allow executing SparqlQuery with RemoteSparqlQuery is possible
+
 ## v2.0.0
 
 - add GraphDB as store option
