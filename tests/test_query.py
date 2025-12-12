@@ -11,6 +11,13 @@ from gldb.stores import InMemoryRDFStore, RemoteSparqlStore
 
 __this_dir__ = pathlib.Path(__file__).parent.resolve()
 
+TESTING_VERSIONS = (9, 12)
+
+
+def get_python_version():
+    """Get the current Python version as a tuple."""
+    return sys.version_info.major, sys.version_info.minor, sys.version_info.micro
+
 
 class TestQuery(unittest.TestCase):
 
@@ -39,8 +46,11 @@ class TestQuery(unittest.TestCase):
         res = SparqlQuery("SELECT * WHERE { ?s ?p ?o }").execute(store)
         self.assertIsInstance(res, QueryResult)
         self.assertEqual(res.query, sparql_query)
+        self.assertEqual(res.derived_graph, None)
         self.assertTrue(res.data.equals(sparql_result_to_df(graph.query("SELECT * WHERE { ?s ?p ?o }"))))
 
+    @unittest.skipUnless(get_python_version()[1] in TESTING_VERSIONS,
+                         reason="Nur auf Python 3.9 und 3.12 testen")
     def test_wikidata_query(self):
         enpoint_url = "https://query.wikidata.org/sparql"
         sparql_wrapper = SPARQLWrapper(enpoint_url)
@@ -59,15 +69,58 @@ ORDER BY ?propertyLabel
         )
         remote_store = RemoteSparqlStore(endpoint_url=enpoint_url, return_format="json")
 
-        if not (sys.version_info.major == 3 and sys.version_info.minor == 12):
-            self.skipTest("Skipping test on non-3.12 Python to avoid rate limiting")
+        res = sparql_query.execute(remote_store)
+        self.assertIsInstance(res, QueryResult)
+        self.assertEqual(res.query, sparql_query)
+        self.assertTrue(len(res.data) >= 917)
 
-            res = sparql_query.execute(remote_store)
-            self.assertIsInstance(res, QueryResult)
-            self.assertEqual(res.query, sparql_query)
-            self.assertTrue(len(res.data["results"]["bindings"]) >= 972)
+        sparql_query = RemoteSparqlQuery(query="DESCRIBE wd:Q131448345")
+        remote_store = RemoteSparqlStore(endpoint_url=enpoint_url, return_format="json-ld")
+        res = sparql_query.execute(remote_store)
+        print(res.data.serialize("json-ld").serialize())
 
-            sparql_query = RemoteSparqlQuery(query="DESCRIBE wd:Q131448345")
-            remote_store = RemoteSparqlStore(endpoint_url=enpoint_url, return_format="json-ld")
-            res = sparql_query.execute(remote_store)
-            print(res.data.serialize("json-ld").serialize())
+    def test_construct_query(self):
+        # g = rdflib.Graph()
+        # g.parse(__this_dir__ / "data" / "planets.ttl", format="turtle")
+        construct_query = """
+        PREFIX ex: <http://example.org/schema/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        CONSTRUCT {
+          ?planet a ex:Planet ;
+                  ex:mass ?mass ;
+                  ex:radius ?radius ;
+                  ex:label ?label .
+        }
+        WHERE {
+          ?planet a ex:Planet ;
+                  ex:mass ?mass ;
+                  ex:radius ?radius .
+          OPTIONAL {
+            ?planet rdfs:label ?label .
+            FILTER(LANG(?label) = "en")
+          }
+        }
+        """
+
+        sparql_query = SparqlQuery(query=construct_query)
+        store = InMemoryRDFStore(data_dir=__this_dir__ / "data")
+        res = sparql_query.execute(store)
+
+        self.assertEqual(16, len(res.derived_graph))
+
+        select_query = """
+        PREFIX ex: <http://example.org/schema/>
+
+        SELECT ?planet ?mass ?radius ?label
+        WHERE {
+          ?planet a ex:Planet ;
+                  ex:mass ?mass ;
+                  ex:radius ?radius .
+          OPTIONAL { ?planet ex:label ?label }
+
+          FILTER(?mass > 1.0e24)
+        }
+        ORDER BY DESC(?mass)
+        """
+        self.assertEqual(3, len(res.derived_graph.query(select_query)))

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v2.1.0
+
+- Additional field `derived_graph` in `QueryResult` allows to provide the derived graph for construct queries
+
 ## v2.0.1
 
 - allow executing SparqlQuery with RemoteSparqlQuery is possible

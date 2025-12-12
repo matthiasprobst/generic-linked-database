@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict
+from typing import Optional
+
+from rdflib import Graph
 
 from ..stores import Store
 
@@ -11,10 +14,12 @@ class AbstractQuery(ABC):
 
 class QueryResult:
 
-    def __init__(self, query: AbstractQuery, data: Any, description: str = None):
+    def __init__(self, query: AbstractQuery, data: Any, description: Optional[str] = None,
+                 derived_graph: Optional[Graph] = None):
         self.query = query
         self.data = data
         self.description = description
+        self.derived_graph = derived_graph
 
     def __len__(self):
         return len(self.data)
