@@ -169,9 +169,28 @@ class StoreManager:
 class InMemoryRDFStore(RDFStore):
     """In-memory RDF database that can upload files and return a combined graph."""
 
-    _expected_file_extensions = {".ttl", ".rdf", ".jsonld"}
+    _expected_file_extensions = {".ttl", ".rdf", ".jsonld", ".nt", ".xml", ".n3"}
 
-    def __init__(self, data_dir: Union[str, pathlib.Path], recursive_exploration: bool = False):
+    def __init__(
+            self,
+            data_dir: Union[str, pathlib.Path],
+            recursive_exploration: bool = False,
+            formats=None
+    ):
+        if formats is None:
+            formats = self._expected_file_extensions
+        elif isinstance(formats, str):
+            formats = {f".{formats.lstrip('.')}", }
+        elif isinstance(formats, (list, set, tuple)):
+            formats = {f".{fmt.lstrip('.')}" for fmt in formats}
+        else:
+            raise ValueError("formats must be a string or a list/set/tuple of strings.")
+
+        for _fmt in formats:
+            if _fmt not in self._expected_file_extensions:
+                raise ValueError(f"File format '{_fmt}' not supported.")
+
+        self._expected_file_extensions = formats
         self._data_dir = pathlib.Path(data_dir).resolve()
         self._data_dir.mkdir(parents=True, exist_ok=True)
         self._recursive_exploration = recursive_exploration

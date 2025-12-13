@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v2.1.1
+
+- allow users to pass the file formats to scan when initializing a `InMemoryRDFStore`
+
 ## v2.1.0
 
 - Additional field `derived_graph` in `QueryResult` allows to provide the derived graph for construct queries

@@ -28,7 +28,23 @@ class MetadataStoreQuery(Query, ABC):
 class SparqlQuery(MetadataStoreQuery):
     """A SPARQL query interface for RDF stores."""
 
-    def execute(self, store: RDFStore, *args, **kwargs):
+    def execute(self, store: RDFStore, *args, **kwargs) -> QueryResult:
+        """Execute the SPARQL query against the given RDF store.
+
+        Parameters
+        ----------
+        store : RDFStore
+            The RDF store to execute the query against.
+        *args
+            Additional positional arguments to pass to the store's query method.
+        **kwargs
+            Additional keyword arguments to pass to the store's query method.
+
+        Returns
+        -------
+        QueryResult
+            The result of the query execution.
+        """
         if isinstance(store, RemoteSparqlStore):
             return RemoteSparqlQuery(self.query, self.description).execute(store)
         res = store.graph.query(self.query, *args, **kwargs)

@@ -9,7 +9,10 @@ from ..stores import Store
 
 
 class AbstractQuery(ABC):
-    pass
+
+    @abstractmethod
+    def execute(self, store: Store) -> "QueryResult":
+        """Executes the query."""
 
 
 class QueryResult:
@@ -48,7 +51,3 @@ class Query(AbstractQuery, ABC):
     def __repr__(self):
         description_repr = self.description or ""
         return f"{self.__class__.__name__}(query=\"{self.query}\", description=\"{description_repr}\")"
-
-    @abstractmethod
-    def execute(self, store: Store) -> QueryResult:
-        """Executes the query."""
